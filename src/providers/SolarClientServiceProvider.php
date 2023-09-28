@@ -1,6 +1,5 @@
 <?php
-
-namespace Gavalierm\SolarClient;
+namespace Gavalierm\Providers\SolarClientServiceProvider;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -14,7 +13,7 @@ class SolarClientServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([__DIR__ . '/../config/solar-client.php' => \config_path('solar-client.php'), ]);
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
     }
 
     /**

@@ -10,7 +10,7 @@
     {
         "psr-4":
         {
-            "Gavalierm\\SolarClient\\": "src/SolarClient"
+            "Gavalierm\\SolarClient\\": "src/providers"
         }
     },
     "authors": [
@@ -23,11 +23,7 @@
     {
         "laravel":
         {
-            "providers": ["Gavalierm\\SolarClient\\SolarClientServiceProvider"],
-            "aliases":
-            {
-                "SolarClient": "Gavalierm\\SolarClient\\SolarClientFacade"
-            }
+            "providers": ["Gavalierm\\SolarClient\\SolarClientServiceProvider"]
         }
     }
 }
