@@ -49,18 +49,6 @@ class SolarApiLaravelServiceProvider extends ServiceProvider
         $this->app->bind('Gavalierm\SolarApiLaravel\SolarApiLaravel', function ($app) {
             $config = $app['config']->get('solar-api-laravel.solar_config');
 
-            if (! isset($config['persistent_data_handler']) && isset($app['session.store'])) {
-                $config['persistent_data_handler'] = new LaravelPersistentDataHandler($app['session.store']);
-            }
-
-            if (! isset($config['url_detection_handler'])) {
-                if ($this->isLumen()) {
-                    $config['url_detection_handler'] = new LumenUrlDetectionHandler($app['url']);
-                } else {
-                    $config['url_detection_handler'] = new LaravelUrlDetectionHandler($app['url']);
-                }
-            }
-
             return new SolarApiLaravel($app['config'], $app['url'], $config);
         });
     }
@@ -75,10 +63,5 @@ class SolarApiLaravelServiceProvider extends ServiceProvider
         return [
             'Gavalierm\SolarApiLaravel\SolarApiLaravel',
         ];
-    }
-
-    private function isLumen()
-    {
-        return is_a(\app(), 'Laravel\Lumen\Application');
     }
 }
