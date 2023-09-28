@@ -1,5 +1,6 @@
 <?php
-namespace Gavalierm\Providers\SolarClientServiceProvider;
+
+namespace Gavalierm\SolarClient;
 
 use Illuminate\Support\ServiceProvider;
 

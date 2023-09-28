@@ -1,13 +1,21 @@
 <?php
 
-namespace Gavalierm\Controllers\SolarClientController;
+namespace Gavalierm\SolarClient\Controllers;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+//use Gavalierm\SolarClient\;
 
 class SolarClientController extends Controller
 {
     private $test_path = '/crm/v1/people/search-all';
 
+
+    public function __invoke(Request $request)
+    {
+        return "Hello, World!";
+    }
 
     public function getHostUrl()
     {

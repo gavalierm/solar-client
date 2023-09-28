@@ -10,7 +10,7 @@
     {
         "psr-4":
         {
-            "Gavalierm\\SolarClient\\": "src/providers"
+            "Gavalierm\\SolarClient\\": "src/providers/"
         }
     },
     "authors": [

@@ -1,6 +1,11 @@
 <?php
 
-use Gavalierm\SolarClient\Controllers;
+namespace Gavalierm\SolarClient\Controllers;
+
 use Illuminate\Support\Facades\Route;
 
-Route::get('/solar', SolarController::class);
+Route::get('/solar', function(){
+    return "Solar installed.";
+});
+
+Route::get('/solar-controller', KdeBolo::class);
