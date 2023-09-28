@@ -1,5 +1,5 @@
 {
-    "name": "gavalierm/solar-api-laravel",
+    "name": "gavalierm/solar-client",
     "type": "laravel-package",
     "require":
     {
@@ -10,7 +10,7 @@
     {
         "psr-4":
         {
-            "Gavalierm\\SolarApiLaravel\\": "src/SolarApiLaravel"
+            "Gavalierm\\SolarClient\\": "src/SolarClient"
         }
     },
     "authors": [
@@ -23,10 +23,10 @@
     {
         "laravel":
         {
-            "providers": ["Gavalierm\\SolarApiLaravel\\SolarApiLaravelServiceProvider"],
+            "providers": ["Gavalierm\\SolarClient\\SolarClientServiceProvider"],
             "aliases":
             {
-                "Solar": "Gavalierm\\SolarApiLaravel\\SolarApiLaravelFacade"
+                "SolarClient": "Gavalierm\\SolarClient\\SolarClientFacade"
             }
         }
     }
