@@ -40,6 +40,9 @@ class SolarApiLaravelServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        if ($this->isLumen()) {
+            $this->app->configure('solar-api-laravel');
+        }
         $this->mergeConfigFrom(__DIR__ . '/../config/solar-api-laravel.php', 'solar-api-laravel');
 
         // Main Service
@@ -60,5 +63,10 @@ class SolarApiLaravelServiceProvider extends ServiceProvider
         return [
             'Gavalierm\SolarApiLaravel\SolarApiLaravel',
         ];
+    }
+
+    private function isLumen()
+    {
+        return is_a(\app(), 'Laravel\Lumen\Application');
     }
 }
