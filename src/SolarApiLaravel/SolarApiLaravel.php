@@ -38,15 +38,8 @@ class SolarApiLaravel
         $this->config_handler = $config_handler;
         $this->url = $url;
         $this->default_config = $config;
-
-        parent::__construct($config);
     }
 
-    /**
-     * @param array $config
-     *
-     * @return LaravelFacebookSdk
-     */
     public function newInstance(array $config)
     {
         $new_config = array_merge($this->default_config, $config);
@@ -54,30 +47,14 @@ class SolarApiLaravel
         return new static($this->config_handler, $this->url, $new_config);
     }
 
-    /**
-     * Get the fallback callback redirect URL if none provided.
-     *
-     * @param string $host_url
-     *
-     * @return string
-     */
-    private function getHostUrl($host_url)
+    public function getHostUrl($host_url = null)
     {
-        $host_url = $host_url ?: $this->config_handler->get('solar-api-laravel.solar_host');
-
-        return $this->url->to($host_url);
+        return $host_url ?: $this->config_handler->get('solar-api-laravel.host');
     }
 
-    /**
-     * Get the fallback callback redirect URL if none provided.
-     *
-     * @param string $callback_url
-     *
-     * @return string
-     */
-    private function getCallbackUrl($callback_url)
+    private function getCallbackUrl($callback_url = null)
     {
-        $callback_url = $callback_url ?: $this->config_handler->get('solar-api-laravel.default_redirect_uri');
+        $callback_url = $callback_url ?: $this->config_handler->get('solar-api-laravel.redirect_uri');
 
         return $this->url->to($callback_url);
     }

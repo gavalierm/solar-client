@@ -20,14 +20,6 @@ class SolarApiLaravelServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if (! $this->app->runningInConsole()) {
-            return;
-        }
-
-        if ($this->isLumen()) {
-            return;
-        }
-
         $this->publishes([
             __DIR__ . '/../config/solar-api-laravel.php' => \config_path('solar-api-laravel.php'),
         ], 'config');
@@ -40,12 +32,8 @@ class SolarApiLaravelServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        if ($this->isLumen()) {
-            $this->app->configure('solar-api-laravel');
-        }
         $this->mergeConfigFrom(__DIR__ . '/../config/solar-api-laravel.php', 'solar-api-laravel');
 
-        // Main Service
         $this->app->bind('Gavalierm\SolarApiLaravel\SolarApiLaravel', function ($app) {
             $config = $app['config']->get('solar-api-laravel.solar_config');
 
@@ -63,10 +51,5 @@ class SolarApiLaravelServiceProvider extends ServiceProvider
         return [
             'Gavalierm\SolarApiLaravel\SolarApiLaravel',
         ];
-    }
-
-    private function isLumen()
-    {
-        return is_a(\app(), 'Laravel\Lumen\Application');
     }
 }
