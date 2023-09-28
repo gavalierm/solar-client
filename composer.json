@@ -1,0 +1,33 @@
+{
+    "name": "gavalierm/solar-api-laravel",
+    "type": "laravel-package",
+    "require":
+    {
+        "guzzlehttp/guzzle": "^7.8"
+    },
+    "license": "MIT",
+    "autoload":
+    {
+        "psr-4":
+        {
+            "Gavalierm\\SolarApiLaravel\\": "src/SolarApiLaravel"
+        }
+    },
+    "authors": [
+    {
+        "name": "gavalierm",
+        "email": "marcel@gavalier.sk"
+    }],
+    "minimum-stability": "stable",
+    "extra":
+    {
+        "laravel":
+        {
+            "providers": ["Gavalierm\\SolarApiLaravel\\SolarApiLaravelServiceProvider"],
+            "aliases":
+            {
+                "Solar": "Gavalierm\\SolarApiLaravel\\SolarApiLaravelFacade"
+            }
+        }
+    }
+}
