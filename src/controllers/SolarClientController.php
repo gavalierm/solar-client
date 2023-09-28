@@ -1,28 +1,47 @@
-<?php
-
-namespace Gavalierm\SolarClient\Controllers;
-
-//use App\Http\Controllers\Controller;
-//use Illuminate\Http\Request;
-//use Illuminate\Support\Facades\Http;
-//use Gavalierm\SolarClient\;
-
-class SolarClientController
-{
-    //private $test_path = '/crm/v1/people/search-all';
-
-    public function getHostUrl()
+    <?php
+    // File: packages/Acme/SolarClient/src/Controllers/SolarClientController.php
+    
+    namespace Acme\SolarClient\Controllers;
+    
+    use Illuminate\Http\Request;
+    use Acme\SolarClient\Models\Page;
+    use Illuminate\Routing\Controller;
+    use Pusher\Laravel\Facades\Pusher;
+    
+    class SolarClientController extends Controller 
     {
-        //return config('solar-api-laravel.host');
+        public function index(Request $request)
+        {
+            if (isset($request->path)) {
+              $page = Page::firstorCreate(['path' => $request->path]);
+      
+              $reviews = $page->reviews()
+                      ->orderBy(
+                          config('solar_client.order.as'),
+                          config('solar_client.order.by')
+                      )
+                      ->get();
+      
+              return response()->json([
+                  'page' => $page,
+                  'reviews' => $reviews
+              ]);
+            }
+              
+            return response()->json([]);
+        }
+    
+        public function store(Request $request)
+        {
+            $page = Page::firstorCreate(['path' => $request->path]);
+    
+            $review = $page->reviews()->create([
+              'username' => $request->username,
+              'comment' => $request->comment,
+            ]);
+    
+            Pusher::trigger('page-'.$page->id, 'new-review', $review);
+    
+            return $review;
+        }
     }
-
-    public function getCallbackUrl()
-    {
-        //return url(config('solar-api-laravel.redirect_uri'));
-    }
-
-    public function test($path = null)
-    {
-        //return Http::get($this->getHostUrl() . ($path ?: $this->$test_path));
-    }
-}

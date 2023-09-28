@@ -16,6 +16,10 @@ class SolarClientServiceProvider extends ServiceProvider
     public function boot()
     {
 
+        $this->publishes([
+        __DIR__ . '/../config/solar-client.php' => config_path('solar-client.php'),
+        ]);
+
         $this->app['router']->namespace('Gavalierm\\SolarClient\\Controllers')
             ->middleware(['web'])
             ->group(function () {
@@ -59,4 +63,3 @@ class SolarClientServiceProvider extends ServiceProvider
         ], 'solar-client.config');
     }
 }
-
