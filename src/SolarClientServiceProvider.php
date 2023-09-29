@@ -5,6 +5,7 @@ namespace Gavalierm\SolarClient;
 //use Gavalierm\SolarClient;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Http;
 
 class SolarClientServiceProvider extends ServiceProvider
 {
@@ -17,15 +18,25 @@ class SolarClientServiceProvider extends ServiceProvider
     {
 
         $this->publishes([
-        __DIR__ . './config/solar-client.php' => config_path('solar-client.php'),
+        __DIR__ . '/config/solar-client.php' => config_path('solar-client.php'),
         ]);
 
         //$this->app->make('Gavalierm\SolarClient\SolarClient');
-        $this->app['router']->namespace('Gavalierm\\SolarClient\\Http\\Controllers')
-                ->middleware(['web'])
-                ->group(function () {
-                    $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
-                });
+        $this->app['router']->middleware(['web'])->prefix('solar')->group(function () {
+            $this->loadRoutesFrom(__DIR__ . '/routes/web.php');
+        });
+
+        Http::macro('demo', function () {
+            return Http::baseUrl(config('solar-client.host_demo') ?: config('solar-client.host'));
+        });
+
+        Http::macro('dev', function () {
+            return Http::baseUrl(config('solar-client.host_dev') ?: config('solar-client.host'));
+        });
+
+        Http::macro('public', function () {
+            return Http::baseUrl(config('solar-client.host_public') ?: config('solar-client.host'));
+        });
 
         if ($this->app->runningInConsole()) {
             $this->bootForConsole();
@@ -39,7 +50,7 @@ class SolarClientServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/solar-client.php', 'solar-client');
+        $this->mergeConfigFrom(__DIR__ . '/config/solar-client.php', 'solar-client');
 
         //$this->app->singleton(SolarClient::class, function (Application $app) {
         //    return new SolarClient(config('solar-client'));
@@ -54,7 +65,7 @@ class SolarClientServiceProvider extends ServiceProvider
     protected function bootForConsole()
     {
         $this->publishes([
-            __DIR__ . '/../config/solar-client.php' => config_path('solar-client.php'),
+            __DIR__ . '/config/solar-client.php' => config_path('solar-client.php'),
         ], 'solar-client.config');
     }
 }
