@@ -27,20 +27,22 @@ class SolarClientServiceProvider extends ServiceProvider
         });
 
         Http::macro('demo', function () {
-            return Http::baseUrl(config('solar-client.host_demo') ?: config('solar-client.host'));
+            return Http::baseUrl(config('solar_client.host_demo') ?: config('solar_client.host'));
         });
 
         Http::macro('dev', function () {
-            return Http::baseUrl(config('solar-client.host_dev') ?: config('solar-client.host'));
+            return Http::baseUrl(config('solar_client.host_dev') ?: config('solar_client.host'));
         });
 
         Http::macro('public', function () {
-            return Http::baseUrl(config('solar-client.host_public') ?: config('solar-client.host'));
+                return Http::withHeaders([
+            'X-Example' => 'example',
+                ])->baseUrl('https://github.com');
         });
 
-        if ($this->app->runningInConsole()) {
-            $this->bootForConsole();
-        }
+        Http::macro('gt', function () {
+            return Http::baseUrl(config('solar_client.host_public') ?: config('solar_client.host'));
+        });
     }
 
     /**
@@ -50,22 +52,10 @@ class SolarClientServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/config/solar-client.php', 'solar-client');
+        $this->mergeConfigFrom(__DIR__ . '/config/solar-client.php', 'solar_client');
 
         //$this->app->singleton(SolarClient::class, function (Application $app) {
         //    return new SolarClient(config('solar-client'));
         //});
-    }
-
-    /**
-     * Console-specific booting.
-     *
-     * @return void
-     */
-    protected function bootForConsole()
-    {
-        $this->publishes([
-            __DIR__ . '/config/solar-client.php' => config_path('solar-client.php'),
-        ], 'solar-client.config');
     }
 }
