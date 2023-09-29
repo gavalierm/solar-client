@@ -1,6 +1,6 @@
 {
     "name": "gavalierm/solar-client",
-    "type": "laravel-package",
+    "type": "library",
     "require":
     {
         "guzzlehttp/guzzle": "^7.8"
@@ -10,7 +10,7 @@
     {
         "psr-4":
         {
-            "Gavalierm\\SolarClient\\": "src/providers/"
+            "Gavalierm\\SolarClient\\": "src/"
         }
     },
     "authors": [
@@ -24,10 +24,6 @@
         "laravel":
         {
             "providers": ["Gavalierm\\SolarClient\\SolarClientServiceProvider"]
-        },
-        "aliases":
-        {
-            "SolarClient": "Gavalierm\\SolarClient\\Facades\\SolarClientFacade"
         }
     }
 }

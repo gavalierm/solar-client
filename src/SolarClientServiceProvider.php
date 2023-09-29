@@ -1,9 +1,9 @@
 <?php
 
-// packages/Gavalierm/SolarClient/src/SolarClientServiceProvider.php
-
 namespace Gavalierm\SolarClient;
 
+//use Gavalierm\SolarClient;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
 class SolarClientServiceProvider extends ServiceProvider
@@ -17,14 +17,15 @@ class SolarClientServiceProvider extends ServiceProvider
     {
 
         $this->publishes([
-        __DIR__ . '/../config/solar-client.php' => config_path('solar-client.php'),
+        __DIR__ . './config/solar-client.php' => config_path('solar-client.php'),
         ]);
 
-        $this->app['router']->namespace('Gavalierm\\SolarClient\\Controllers')
-            ->middleware(['web'])
-            ->group(function () {
-                $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
-            });
+        //$this->app->make('Gavalierm\SolarClient\SolarClient');
+        $this->app['router']->namespace('Gavalierm\\SolarClient\\Http\\Controllers')
+                ->middleware(['web'])
+                ->group(function () {
+                    $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+                });
 
         if ($this->app->runningInConsole()) {
             $this->bootForConsole();
@@ -39,16 +40,10 @@ class SolarClientServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/solar-client.php', 'solar-client');
-    }
 
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        return ['solar-client'];
+        //$this->app->singleton(SolarClient::class, function (Application $app) {
+        //    return new SolarClient(config('solar-client'));
+        //});
     }
 
     /**
