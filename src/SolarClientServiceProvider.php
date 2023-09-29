@@ -27,21 +27,15 @@ class SolarClientServiceProvider extends ServiceProvider
         });
 
         Http::macro('demo', function () {
-            return Http::baseUrl(config('solar_client.host_demo') ?: config('solar_client.host'));
+            return Http::baseUrl(config('solar_client.demo.host') ?: config('solar_client.config.host'));
         });
 
         Http::macro('dev', function () {
-            return Http::baseUrl(config('solar_client.host_dev') ?: config('solar_client.host'));
+            return Http::baseUrl(config('solar_client.dev.host') ?: config('solar_client.config.host'));
         });
 
         Http::macro('public', function () {
-                return Http::withHeaders([
-            'X-Example' => 'example',
-                ])->baseUrl('https://github.com');
-        });
-
-        Http::macro('gt', function () {
-            return Http::baseUrl(config('solar_client.host_public') ?: config('solar_client.host'));
+            return Http::baseUrl(config('solar_client.public.host') ?: config('solar_client.config.host'));
         });
     }
 

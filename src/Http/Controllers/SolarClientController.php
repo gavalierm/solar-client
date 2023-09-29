@@ -16,27 +16,27 @@ class SolarClientController
     protected $headers = ['Content-Type' => 'application/json'];
 
 
-    public function get($path)
+    protected function get($path)
     {
         return $this->call('get', $path);
     }
 
-    public function post($path, $data)
+    protected function post($path, $data)
     {
         return $this->call('post', $path);
     }
 
-    public function put($path, $data)
+    protected function put($path, $data)
     {
         return $this->call('put', $path);
     }
 
-    public function delete($path)
+    protected function delete($path)
     {
         return $this->call('delete', $path);
     }
 
-    private function call($method, $data)
+    protected function call($method, $data)
     {
         if (!$this->isAccessTokenValid()) {
             $token = $this->authorize();
@@ -44,7 +44,7 @@ class SolarClientController
             $token = $this->getAccessToken();
         }
 
-        $call = Http::withToken($token)->withHeaders($this->headers)->{ $this->scenario }();
+        $call = Http::{ $this->scenario }()->withToken($token)->withHeaders($this->headers);
 
         if ($data) {
             $response = $call->{$method}($path, $data);
@@ -55,7 +55,7 @@ class SolarClientController
         return $response;
     }
 
-    private function authorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
+    protected function authorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
     {
         if ($this->isAccessTokenValid()) {
             return $this->getAccessToken();
@@ -63,26 +63,28 @@ class SolarClientController
         return $this->reAuthorize($path, $data);
     }
 
-    private function reAuthorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
+    protected function reAuthorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
     {
 
         //return config()->all();
         $this->clearAccessToken();
 
-        $response = Http::withBasicAuth(config('solar_client.config.user','no_user'), config('solar_client.config.pass','no_pass'))->withHeaders(['Content-Type' => 'application/x-www-form-urlencoded'])->{ $this->scenario }()->post($path, $data);
+        $response = Http::{ $this->scenario }()->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth(config('solar_client.' . $this->scenario . '.user', config('solar_client.config.user', 'no_user')), config('solar_client.' . $this->scenario . '.pass', config('solar_client.config.pass', 'no_pass')))->asForm()->post($path, $data);
 
-        $body = $response->getBody();
-        $status = $response->getStatus();
+        $body = $response->json();
+        $status = $response->getStatusCode();
         $headers = $response->getHeaders();
 
-        $this->setAccessToken($body);
+        if ($response->failed()) {
+            return [config('solar_client.config.user', 'no_user'),$status,$body];
+        }
 
-        return $this->getAccessToken();
+        return $this->setAccessToken($body);
     }
 
-    private function isAccessTokenValid()
+    protected function isAccessTokenValid()
     {
-        $access_token = session('solar.access_token');
+        $access_token = session('solar_session.access_token');
 
         if (empty($access_token)) {
             return false;
@@ -99,37 +101,37 @@ class SolarClientController
         return true;
     }
 
-    public function getAccessToken()
+    protected function getAccessToken()
     {
         //hack modify expires in when access token
-        $access_token = session('solar.access_token');
+        $access_token = session('solar_session.access_token');
 
         $access_token['expires_in'] = $access_token['valid_until'] - intval(time());
 
-        $access_token = session(['solar.access_token' => $access_token]);
+        session(['solar_session.access_token' => $access_token]);
 
         return $access_token;
     }
 
-    public function setAccessToken($access_token)
+    protected function setAccessToken($access_token)
     {
-        //_log($token);
         $access_token['valid_until'] = strtotime('+' . (intval($access_token['expires_in']) - 360) . ' second');
 
-        $access_token = session(['solar.access_token' => $access_token]);
+        session(['solar_session.access_token' => $access_token]);
 
         return $access_token;
     }
 
-    public function clearAccessToken()
+    protected function clearAccessToken()
     {
-        session()->forget(['solar.access_token']);
+        session()->forget(['solar_session.access_token']);
         return null;
     }
 
     public function test()
     {
-        return $this->authorize();
-        return $this->authorize()->json();
+        return ["Just fine"];
+        //return $this->authorize();
+        //return $this->authorize()->json();
     }
 }

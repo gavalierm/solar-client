@@ -1,6 +1,7 @@
 <?php
 
 use Gavalierm\SolarClient\Http\Controllers\SolarClientController;
+use Gavalierm\SolarClient\Http\Controllers\CrmSolarClientController;
 //use App\Http\Controllers\SolarClientController;
 //use Illuminate\Support\Facades\Route;
 
