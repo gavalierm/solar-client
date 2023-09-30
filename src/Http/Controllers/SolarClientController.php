@@ -12,9 +12,14 @@ use Illuminate\Support\Facades\Http;
 
 class SolarClientController
 {
-    public $scenario = 'public';
+    protected $scenario;
+    protected $authorization_atempt = 0;
     protected $headers = ['Content-Type' => 'application/json'];
 
+    function __construct($scenario = 'public')
+    {
+        $this->scenario = $scenario;
+    }
 
     protected function get($path)
     {
@@ -36,22 +41,29 @@ class SolarClientController
         return $this->call('delete', $path);
     }
 
-    protected function call($method, $data)
+    protected function call($method, $path, $data = null)
     {
-        if (!$this->isAccessTokenValid()) {
-            $token = $this->authorize();
-        } else {
-            $token = $this->getAccessToken();
-        }
+        $token = $this->authorize();
 
-        $call = Http::{ $this->scenario }()->withToken($token)->withHeaders($this->headers);
+        $call = Http::{ $this->scenario }()->withToken($token['access_token'])->withHeaders($this->headers);
 
         if ($data) {
             $response = $call->{$method}($path, $data);
+        } else {
+            $response = $call->{$method}($path);
         }
 
-        $response = $call->{$method}($path);
+        $body = $response->json();
+        $status = $response->getStatusCode();
+        $headers = $response->getHeaders();
 
+        if ($response->failed()) {
+            if ($status == 401 and $this->authorization_atempt < 3) {
+                $this->reAuthorize();
+                return $this->call($method, $path, $data);
+            }
+            return [$status,$body];
+        }
         return $response;
     }
 
@@ -66,18 +78,21 @@ class SolarClientController
     protected function reAuthorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
     {
 
-        //return config()->all();
+        $this->authorization_atempt++;
+
         $this->clearAccessToken();
 
-        $response = Http::{ $this->scenario }()->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth(config('solar_client.' . $this->scenario . '.user', config('solar_client.config.user', 'no_user')), config('solar_client.' . $this->scenario . '.pass', config('solar_client.config.pass', 'no_pass')))->asForm()->post($path, $data);
+        $response = Http::{ $this->scenario }()->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth(config('solar_client.' . $this->scenario . '.user', config('solar_client.default.user')), config('solar_client.' . $this->scenario . '.pass', config('solar_client.default.pass')))->asForm()->post($path, $data);
 
         $body = $response->json();
         $status = $response->getStatusCode();
         $headers = $response->getHeaders();
 
         if ($response->failed()) {
-            return [config('solar_client.config.user', 'no_user'),$status,$body];
+            return [$status,$body];
         }
+
+        $this->authorization_atempt = 0;
 
         return $this->setAccessToken($body);
     }
@@ -128,9 +143,26 @@ class SolarClientController
         return null;
     }
 
+    public function getConfig($scenario = null, $hidden = false)
+    {
+        $config = config('solar_client');
+
+        if ($hidden) {
+            foreach ($config as $k => $v) {
+                $config[$k]['user'] = "****";
+                $config[$k]['pass'] = "****";
+            }
+        }
+
+        if ($scenario) {
+            return $config[$scenario];
+        }
+        return $config;
+    }
+
     public function test()
     {
-        return ["Just fine"];
+        return ["Just fine", $this->getConfig($this->scenario, true)];
         //return $this->authorize();
         //return $this->authorize()->json();
     }
