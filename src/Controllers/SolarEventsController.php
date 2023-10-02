@@ -1,6 +1,6 @@
 <?php
 
-namespace Gavalierm\SolarClient\Http\Controllers;
+namespace Gavalierm\SolarClient\Controllers;
 
 use Illuminate\Support\Facades\Http;
 
@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
     //use Illuminate\Routing\Controller;
     //use Pusher\Laravel\Facades\Pusher;
 
-class EventsSolarClientController extends SolarClientController
+class SolarEventsController extends SolarClientController
 {
     protected $base_path = '/events/api/v1/events';
 

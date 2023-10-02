@@ -1,6 +1,6 @@
 <?php
 
-namespace Gavalierm\SolarClient\Http\Controllers;
+namespace Gavalierm\SolarClient\Controllers;
 
 use Illuminate\Support\Facades\Http;
 
@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Http;
 
 class SolarClientController
 {
+    protected $debug = false;
+
     protected $scenario;
     protected $authorization_atempt = 0;
     protected $headers = ['Content-Type' => 'application/json'];
@@ -45,24 +47,29 @@ class SolarClientController
     {
         $token = $this->authorize();
 
-        $call = Http::{ $this->scenario }()->withToken($token['access_token'])->withHeaders($this->headers);
+        try {
+            $call = Http::{ $this->scenario }()->withToken($token['access_token'])->withHeaders($this->headers);
 
-        if ($data) {
-            $response = $call->{$method}($path, $data);
-        } else {
-            $response = $call->{$method}($path);
+            if ($data) {
+                $response = $call->{$method}($path, $data);
+            } else {
+                $response = $call->{$method}($path);
+            }
+
+            $body = $response->json();
+            $status = $response->getStatusCode();
+            $headers = $response->getHeaders();
+            
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return $this->debug ? [500,$e->getMessage()] : null;
         }
-
-        $body = $response->json();
-        $status = $response->getStatusCode();
-        $headers = $response->getHeaders();
 
         if ($response->failed()) {
             if ($status == 401 and $this->authorization_atempt < 3) {
                 $this->reAuthorize();
                 return $this->call($method, $path, $data);
             }
-            return [$status,$body];
+            return $this->debug ? [$status,$body] : null;
         }
         return $response;
     }
@@ -82,14 +89,18 @@ class SolarClientController
 
         $this->clearAccessToken();
 
-        $response = Http::{ $this->scenario }()->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth(config('solar_client.' . $this->scenario . '.user', config('solar_client.default.user')), config('solar_client.' . $this->scenario . '.pass', config('solar_client.default.pass')))->asForm()->post($path, $data);
+        try {
+            $response = Http::{ $this->scenario }()->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth(config('solar_client.' . $this->scenario . '.user', config('solar_client.default.user')), config('solar_client.' . $this->scenario . '.pass', config('solar_client.default.pass')))->asForm()->post($path, $data);
 
-        $body = $response->json();
-        $status = $response->getStatusCode();
-        $headers = $response->getHeaders();
+            $body = $response->json();
+            $status = $response->getStatusCode();
+            $headers = $response->getHeaders();
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return $this->debug ? [500,$e->getMessage()] : null;
+        }
 
         if ($response->failed()) {
-            return [$status,$body];
+            return $this->debug ? [$status,$body] : null;
         }
 
         $this->authorization_atempt = 0;
@@ -158,6 +169,11 @@ class SolarClientController
             return $config[$scenario];
         }
         return $config;
+    }
+
+    protected function setDebug(bool $debug)
+    {
+        $this->debug = $debug;
     }
 
     public function test()
