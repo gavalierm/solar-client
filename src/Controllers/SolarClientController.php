@@ -59,7 +59,7 @@ class SolarClientController
             $body = $response->json();
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
-            
+
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             return $this->debug ? [500,$e->getMessage()] : null;
         }
@@ -71,7 +71,7 @@ class SolarClientController
             }
             return $this->debug ? [$status,$body] : null;
         }
-        return $response;
+        return $body;
     }
 
     protected function authorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
@@ -171,7 +171,7 @@ class SolarClientController
         return $config;
     }
 
-    protected function setDebug(bool $debug)
+    public function setDebug(bool $debug)
     {
         $this->debug = $debug;
     }
