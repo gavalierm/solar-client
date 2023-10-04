@@ -3,7 +3,8 @@
     "type": "library",
     "require":
     {
-        "guzzlehttp/guzzle": "^7.8"
+        "guzzlehttp/guzzle": "^7.8",
+        "kevinrob/guzzle-cache-middleware": "^4.1"
     },
     "license": "MIT",
     "autoload":
