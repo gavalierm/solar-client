@@ -6,14 +6,30 @@ use Illuminate\Support\Facades\Http;
 
 class SolarEventController extends SolarEventsController
 {
-
-    public function getBySlug($slug)
+    public function getBySlugWithCache($slug, array $modules = [], $with_cache = true)
     {
-        return $this->get($this->base_path . $this->event_path . '/get-events', $data);
+        return $this->getBySlug($id, $modules, $with_cache);
     }
-    public function getById($id, array $modules = [])
+
+    public function getBySlug($slug, array $modules = [], $with_cache = false)
     {
-        $data = $this->get($this->base_path . $this->event_path . '/' . $id);
+        $data = $this->get($this->base_path . $this->event_path . '/' . $slug);
+
+        return $this->reachEvent($data, $modules, $with_cache);
+    }
+
+    public function getByIdWithCache($id, array $modules = [], $with_cache = true)
+    {
+        return $this->getById($id, $modules, $with_cache);
+    }
+
+    public function getById($id, array $modules = [], $with_cache = false)
+    {
+        if ($with_cache) {
+            $data = $this->getWithCache($this->base_path . $this->event_path . '/' . $id);
+        } else {
+            $data = $this->get($this->base_path . $this->event_path . '/' . $id);
+        }
 
         return $this->reachEvent($data, $modules);
     }

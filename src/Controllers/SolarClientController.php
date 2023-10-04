@@ -59,7 +59,8 @@ class SolarClientController
         try {
             //cache
             if ($method == 'get-with-cache') {
-                $options = array_merge(['handler' => $this->cache_stack], $options);
+                //$options = array_merge(['handler' => $this->cache_stack], $options);
+                //return $options;
                 $method = 'get';
             }
             //
