@@ -3,12 +3,8 @@
 namespace Gavalierm\SolarClient\Controllers;
 
 use Illuminate\Support\Facades\Http;
-
-    //use Illuminate\Http\Request;
-
-    //use Acme\PageReview\Models\Page;
-    //use Illuminate\Routing\Controller;
-    //use Pusher\Laravel\Facades\Pusher;
+use GuzzleHttp\HandlerStack;
+use Kevinrob\GuzzleCache\CacheMiddleware;
 
 class SolarClientController
 {
@@ -18,9 +14,22 @@ class SolarClientController
     protected $authorization_atempt = 0;
     protected $headers = ['Content-Type' => 'application/json'];
 
+    protected $cache_stack;
+
     function __construct($scenario = 'public')
     {
         $this->scenario = $scenario;
+
+        // Create default HandlerStack
+        $this->cache_stack = HandlerStack::create();
+
+        // Add this middleware to the top with `push`
+        $this->cache_stack->push(new CacheMiddleware(), 'solar_cache');
+    }
+
+    protected function getWithCache($path)
+    {
+        return $this->call('get-with-cache', $path);
     }
 
     protected function get($path)
@@ -43,12 +52,18 @@ class SolarClientController
         return $this->call('delete', $path);
     }
 
-    protected function call($method, $path, $data = null)
+    protected function call($method, $path, $data = null, $options = [])
     {
         $token = $this->authorize();
 
         try {
-            $call = Http::{ $this->scenario }()->withToken($token['access_token'])->withHeaders($this->headers);
+            //cache
+            if ($method == 'get-with-cache') {
+                $options = array_merge(['handler' => $this->cache_stack], $options);
+                $method = 'get';
+            }
+            //
+            $call = Http::{ $this->scenario }()->withOptions($options)->withToken($token['access_token'])->withHeaders($this->headers);
 
             if ($data) {
                 $response = $call->{$method}($path, $data);
@@ -59,7 +74,6 @@ class SolarClientController
             $body = $response->json();
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
-
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             return $this->debug ? [500,$e->getMessage()] : null;
         }
