@@ -21,15 +21,11 @@ class SolarClientController
         $this->scenario = $scenario;
 
         // Create default HandlerStack
-        $this->cache_stack = HandlerStack::create();
-
-        // Add this middleware to the top with `push`
-        $this->cache_stack->push(new CacheMiddleware(), 'solar_cache');
-    }
-
-    protected function getWithCache($path)
-    {
-        return $this->call('get-with-cache', $path);
+        if (!$this->cache_stack) {
+            $this->cache_stack = HandlerStack::create();
+            // Add this middleware to the top with `push`
+            $this->cache_stack->push(new CacheMiddleware(), 'solar_cache');
+        }
     }
 
     protected function get($path)
@@ -57,14 +53,7 @@ class SolarClientController
         $token = $this->authorize();
 
         try {
-            //cache
-            if ($method == 'get-with-cache') {
-                //$options = array_merge(['handler' => $this->cache_stack], $options);
-                //return $options;
-                $method = 'get';
-            }
-            //
-            $call = Http::{ $this->scenario }()->withOptions($options)->withToken($token['access_token'])->withHeaders($this->headers);
+            $call = Http::{ $this->scenario }()->withOptions(['handler' => $this->cache_stack])->withToken($token['access_token'])->withHeaders($this->headers);
 
             if ($data) {
                 $response = $call->{$method}($path, $data);
