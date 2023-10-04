@@ -1,34 +1,25 @@
 <?php
 
-namespace Gavalierm\SolarClient\Controllers;
+namespace Gavalierm\SolarClient\Controllers\Events;
 
 use Illuminate\Support\Facades\Http;
 
-    //use Illuminate\Http\Request;
-
-    //use Acme\PageReview\Models\Page;
-    //use Illuminate\Routing\Controller;
-    //use Pusher\Laravel\Facades\Pusher;
-
-class SolarEventsController extends SolarClientController
+class SolarEventController extends SolarEventsController
 {
-    protected $base_path = '/events/api/v1/events';
-    protected $people_path = '/crm/api/v1/people';
-    protected $business_path = '/crm/api/v1/business-entity';
 
     public function getBySlug($slug)
     {
-        return $this->get($this->base_path . '/get-events', $data);
+        return $this->get($this->base_path . $this->event_path . '/get-events', $data);
     }
     public function getById($id, array $modules = [])
     {
-        $data = $this->get($this->base_path . '/' . $id);
+        $data = $this->get($this->base_path . $this->event_path . '/' . $id);
 
         return $this->reachEvent($data, $modules);
     }
     public function getAll()
     {
-        return $this->get($this->base_path . '/get-events');
+        return $this->get($this->base_path . $this->event_path . '/get-events');
     }
 
     private function reachEvent($data, $modules = ['responsiblePerson', 'moderators', 'speakers','partners', 'eventRateCardItems'])
@@ -49,7 +40,7 @@ class SolarEventsController extends SolarClientController
             if (!empty($data['eventRateCardItems'])) {
                 $eventRateCardItems = [];
                 foreach ($data['eventRateCardItems'] as $eventRateCardItems_id) {
-                    $eventRateCardItems[] = $this->get();
+                    //$eventRateCardItems[] = $this->get();
                 }
                 $data['eventRateCardItems'] = $eventRateCardItems;
             }
