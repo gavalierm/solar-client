@@ -15,6 +15,7 @@ class SolarClientController
     protected $headers = ['Content-Type' => 'application/json'];
 
     protected $cache_stack;
+    protected $token;
 
     function __construct($scenario = 'public')
     {
@@ -52,6 +53,10 @@ class SolarClientController
     {
         $token = $this->authorize();
 
+        if (!isset($token['access_token'])) {
+             return $this->debug ? [401,"No valid token"] : null;
+        }
+
         try {
             $call = Http::{ $this->scenario }()->withOptions(['handler' => $this->cache_stack])->withToken($token['access_token'])->withHeaders($this->headers);
 
@@ -81,7 +86,7 @@ class SolarClientController
     protected function authorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
     {
         if ($this->isAccessTokenValid()) {
-            return $this->getAccessToken();
+            //return $this->getAccessToken();
         }
         return $this->reAuthorize($path, $data);
     }
@@ -94,7 +99,10 @@ class SolarClientController
         $this->clearAccessToken();
 
         try {
-            $response = Http::{ $this->scenario }()->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth(config('solar_client.' . $this->scenario . '.user', config('solar_client.default.user')), config('solar_client.' . $this->scenario . '.pass', config('solar_client.default.pass')))->asForm()->post($path, $data);
+            $user = config('solar_client.' . $this->scenario . '.user') ?: (config('solar_client.default.user') ?: '');
+            $pass = config('solar_client.' . $this->scenario . '.pass') ?: (config('solar_client.default.pass') ?: '');
+
+            $response = Http::{ $this->scenario }()->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth($user, $pass)->asForm()->post($path, $data);
 
             $body = $response->json();
             $status = $response->getStatusCode();

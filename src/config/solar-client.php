@@ -2,9 +2,9 @@
 
 return [
          'default' => [
-                'host' => env('SOLAR_HOST', 'no_host'),
-                'user' => env('SOLAR_USER', 'no_user'),
-                'pass' => env('SOLAR_PASS', 'no_pass'),
+                'host' => env('SOLAR_HOST'),
+                'user' => env('SOLAR_USER'),
+                'pass' => env('SOLAR_PASS'),
                 'redirect_url' => env('SOLAR_REDIRECT_URL', '/solar/callback')
          ],         
          'dev' => [
