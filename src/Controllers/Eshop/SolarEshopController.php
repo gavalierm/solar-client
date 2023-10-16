@@ -14,4 +14,5 @@ use Illuminate\Support\Facades\Http;
 class SolarEshopController extends SolarClientController
 {
     protected $base_path = '/eshop/api/v1/';
+    protected $site_path = '/sites/site';
 }

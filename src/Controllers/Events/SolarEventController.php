@@ -10,7 +10,7 @@ class SolarEventController extends SolarEventsController
     {
         $data = $this->get($this->base_path . $this->event_path . '/' . $slug);
 
-        return $this->reachEvent($data, $modules, $with_cache);
+        return $this->reachEvent($data, $modules);
     }
 
     public function getById($id, array $modules = [])
@@ -24,7 +24,7 @@ class SolarEventController extends SolarEventsController
         return $this->get($this->base_path . $this->event_path . '/get-events');
     }
 
-    private function reachEvent($data, $modules = ['responsiblePerson', 'moderators', 'speakers','partners', 'eventRateCardItems'])
+    private function reachEvent($data, $modules = ['responsiblePerson', 'moderators', 'speakers', 'partners', 'eventRateCardItems'])
     {
         if (empty($modules)) {
             return $data;
@@ -80,17 +80,20 @@ class SolarEventController extends SolarEventsController
                         $data['parts'][$part_k]['moderators'] = $moderators;
                     }
                     //scheduleItems
-                    if (in_array('speakers', $modules) or in_array('speakers', $modules)) {
+                    if (in_array('speakers', $modules)) {
+                        $all_speakers = [];
                         foreach ($part_v['scheduleItems'] as $scheduleItems_k => $scheduleItems_v) {
                             if (in_array('speakers', $modules)) {
                                 $speakers = [];
                                 foreach ($scheduleItems_v['speakers'] as $speaker) {
                                     $speaker['person'] = $this->get($this->people_path . '/' . $speaker['person']);
                                     $speakers[] = $speaker;
+                                    $all_speakers[$speaker['person']['id']] = $speaker;
                                 }
                                 $data['parts'][$part_k]['scheduleItems'][$scheduleItems_k]['speakers'] = $speakers;
                             }
                         }
+                        $data['speakers'] = $all_speakers;
                     }
                 }
             }
