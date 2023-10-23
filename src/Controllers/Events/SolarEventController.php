@@ -6,35 +6,94 @@ use Illuminate\Support\Facades\Http;
 
 class SolarEventController extends SolarEventsController
 {
-    public function getBySlug($slug, array $modules = [])
+    public function getPublicBySlug($slug, array $modules = [], array $filters = [])
+    {
+        $filters = array_merge(["active" => true], $filters);
+
+        return $this->getBySlug($slug, $modules, $filters);
+    }
+
+    public function getBySlug($slug, array $modules = [], array $filters = [])
     {
         $data = $this->get($this->base_path . $this->event_path . '/' . $slug);
 
+        foreach ($data as $key => $value) {
+            if (isset($filters[$key]) and $filters[$key] !== $value) {
+                return null;
+            }
+        }
         return $this->reachEvent($data, $modules);
     }
 
-    public function getById($id, array $modules = [])
+    public function getPublicById($id, array $modules = [], array $filters = [])
     {
-        $data = $this->get($this->base_path . $this->event_path . '/' . $id);
+        $filters = array_merge(["active" => true], $filters);
 
-        return $this->reachEvent($data, $modules);
+        return $this->getById($id, $modules, $filters);
     }
-    public function getAll()
+    public function getById($id, array $modules = [], array $filters = [])
     {
-        return $this->get($this->base_path . $this->event_path . '/get-events');
+        $item = $this->get($this->base_path . $this->event_path . '/' . $id);
+
+        if (!empty($filters)) {
+            foreach ($filters as $key => $value) {
+                if (!isset($item[$key]) or $filters[$key] !== $item[$key]) {
+                    return null;
+                }
+            }
+        }
+
+        return $this->reachEvent($item, $modules);
     }
 
-    private function reachEvent($data, $modules = ['responsiblePerson', 'moderators', 'speakers', 'partners', 'eventRateCardItems'])
+    public function getPublicAll(array $modules = [], array $filters = [])
+    {
+        $filters = array_merge(["active" => true], $filters);
+
+        return $this->getAll($modules, $filters);
+    }
+
+    public function getAll(array $modules = [], array $filters = [])
+    {
+
+        $data = $this->get($this->base_path . $this->event_path . '/get-events');
+
+        if (!empty($modules) or !empty($filters)) {
+            $data_ = [];
+            foreach ($data as $item) {
+                if (!empty($filters)) {
+                    foreach ($filters as $key => $value) {
+                        if (!isset($item[$key]) or $filters[$key] !== $item[$key]) {
+                            continue 2;
+                        }
+                    }
+                }
+                $data_[] = $this->reachEvent($item, $modules);
+            }
+            $data = $data_;
+        }
+        return $data;
+    }
+
+    private function reachEvent($data, $modules = ['responsiblePersons', 'moderators', 'speakers', 'partners', 'eventRateCardItems'])
     {
         if (empty($modules)) {
             return $data;
         }
 
-        //responsiblePerson
-        if (in_array('responsiblePerson', $modules)) {
-            if (!empty($data['responsiblePerson'])) {
-                $data['responsiblePerson'] = $this->get($this->people_path . '/' . $data['responsiblePerson']);
+        //responsiblePersons
+        if (in_array('responsiblePersons', $modules)) {
+            if (!empty($data['responsiblePersons'])) {
+                $persons = [];
+                foreach ($data['responsiblePersons'] as $person_pk) {
+                    $person = $this->get($this->people_path . '/' . $person_pk);
+                    //$person['type'] = 'com.mediasol.solar.crm.people.model.PersonImpl'; //hack
+                    $persons[] = $person;
+                }
+                $data['responsiblePersons'] = $persons;
             }
+        } else {
+            $data['responsiblePersons'] = [];
         }
 
         //eventRateCardItems
@@ -53,7 +112,8 @@ class SolarEventController extends SolarEventsController
             if (!empty($data['partners'])) {
                 $partners = [];
                 foreach ($data['partners'] as $partner) {
-                    switch ($partner['subject']['type']) {
+                    $type = $partner['subject']['type'];
+                    switch ($type) {
                         case 'com.mediasol.solar.crm.be.model.BusinessEntity':
                             $partner['subject'] = $this->get($this->business_path . '/' . $partner['subject']['pk']);
                             break;
@@ -61,7 +121,8 @@ class SolarEventController extends SolarEventsController
                             $partner['subject'] = $this->get($this->people_path . '/' . $partner['subject']['pk']);
                             break;
                     }
-
+                    //resolved subject do not have type need to be refilled again
+                    $partner['subject']['type'] = $type;
                     $partners[] = $partner;
                 }
                 $data['partners'] = $partners;
@@ -97,7 +158,7 @@ class SolarEventController extends SolarEventsController
                     }
                 }
             }
-            //$data['responsiblePerson'] = $this->crm->getPersonById($data['responsiblePerson']);
+            //$data['responsiblePersons'] = $this->crm->getPersonById($data['responsiblePersons']);
         }
         return $data;
     }
