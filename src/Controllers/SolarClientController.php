@@ -54,7 +54,7 @@ class SolarClientController
         $token = $this->authorize();
 
         if (!isset($token['access_token'])) {
-             return $this->debug ? [401,"No valid token"] : null;
+             return $this->debug ? ["data_error" => 401,"body"=>"No valid token"] : ["data_error" => 401,"body"=>"No valid token"];
         }
 
         try {
@@ -70,7 +70,7 @@ class SolarClientController
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return $this->debug ? [500,$e->getMessage()] : null;
+            return $this->debug ? ["data_error" => 500,"body"=>$e->getMessage()] : ["data_error" => 500,"body"=>"Server error"];
         }
 
         if ($response->failed()) {
@@ -78,7 +78,7 @@ class SolarClientController
                 $this->reAuthorize();
                 return $this->call($method, $path, $data);
             }
-            return $this->debug ? [$status,$body] : null;
+            return $this->debug ? ["data_error" => $status,"body"=>$body] : ["data_error" => $status,"body"=>"Something went wrong"];
         }
         return $body;
     }
@@ -108,11 +108,11 @@ class SolarClientController
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return $this->debug ? [500,$e->getMessage()] : null;
+            return $this->debug ? ["data_error" => 500,$e->getMessage()] : ["data_error" => 500,"Server error"];
         }
 
         if ($response->failed()) {
-            return $this->debug ? [$status,$body] : null;
+            return $this->debug ? [$status,$body] : [$status,"Something went wrong"];
         }
 
         $this->authorization_atempt = 0;

@@ -12,15 +12,15 @@ class SolarBusinessController extends SolarCrmController
         return $this->post($this->base_path . $this->business_path . '/search-all', $data);
     }
 
-    public function getPersonBySlug($slug)
+    public function getBySlug($slug)
     {
         return $this->get($this->base_path . $this->business_path . '/', $data);
     }
-    public function getPersonByEmail($email)
+    public function getByEmail($email)
     {
         return $this->searchPerson(["email" => $email]);
     }
-    public function getPersonById($id)
+    public function getById($id)
     {
         return $this->get($this->base_path . $this->business_path . '/' . $id);
     }
