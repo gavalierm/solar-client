@@ -14,7 +14,7 @@ class SolarPersonController extends SolarCrmController
 
     public function getBySlug($slug)
     {
-        return $this->get($this->base_path . $this->people_path . '/', $data);
+        return $this->get($this->base_path . $this->people_path . '/', $slug);
     }
     public function getByEmail($email)
     {

@@ -14,7 +14,7 @@ class SolarBusinessController extends SolarCrmController
 
     public function getBySlug($slug)
     {
-        return $this->get($this->base_path . $this->business_path . '/', $data);
+        return $this->get($this->base_path . $this->business_path . '/', $slug);
     }
     public function getByEmail($email)
     {
