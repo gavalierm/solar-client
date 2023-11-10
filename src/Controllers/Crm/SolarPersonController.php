@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Http;
 
 class SolarPersonController extends SolarCrmController
 {
-
     public function search($data)
     {
         return $this->post($this->base_path . $this->people_path . '/search-all', $data);

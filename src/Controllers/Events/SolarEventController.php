@@ -27,6 +27,7 @@ class SolarEventController extends SolarEventsController
 
     public function getById($id, array $filters = [])
     {
+
         $data = $this->get($this->base_path . $this->event_path . '/' . $id);
 
         if (isset($data['data_error'])) {
@@ -103,6 +104,7 @@ class SolarEventController extends SolarEventsController
 
     public function richData($data, $rich = [])
     {
+
         if (empty($rich)) {
             return $data;
         }
@@ -115,7 +117,7 @@ class SolarEventController extends SolarEventsController
             if (!empty($data['responsiblePersons'])) {
                 $persons = [];
                 foreach ($data['responsiblePersons'] as $person_pk) {
-                    $persons[] = $person->getById($person_pk);
+                    $persons[] = $this->get($person->base_path . $person->person_path . "/" . $person_pk);
                 }
                 $data['responsiblePersons'] = $persons;
             }
@@ -123,6 +125,7 @@ class SolarEventController extends SolarEventsController
             $data['responsiblePersons'] = [];
         }
 
+        //return $data;
         //eventRateCardItems
         if (in_array('eventRateCardItems', $rich)) {
             if (!empty($data['eventRateCardItems'])) {
@@ -140,21 +143,24 @@ class SolarEventController extends SolarEventsController
                 $partners = [];
                 foreach ($data['partners'] as $partner) {
                     $type = $partner['subject']['type'];
+
                     switch ($type) {
                         case 'com.mediasol.solar.crm.be.model.BusinessEntity':
-                            $partner['subject'] = $bussines->getById($partner['subject']['pk']);
+                            $partner['subject'] = $this->get($bussines->base_path . $bussines->business_path . "/" . $partner['subject']['pk']);
                             break;
                         case 'com.mediasol.solar.crm.people.model.PersonImpl':
-                            $partner['subject'] = $person->getById($partner['subject']['pk']);
+                            $partner['subject'] = $this->get($person->base_path . $person->person_path . "/" . $partner['subject']['pk']);
                             break;
                     }
                     //resolved subject do not have type need to be refilled again
-                    $partner['subject']['type'] = $type;
+                    $partner_['subject']['type'] = $type;
                     $partners[] = $partner;
                 }
                 $data['partners'] = $partners;
             }
         }
+
+        //return $data;
         //parts
         if (in_array('moderators', $rich) or in_array('speakers', $rich)) {
             if (!empty($data['parts'])) {
@@ -163,7 +169,7 @@ class SolarEventController extends SolarEventsController
                     if (in_array('moderators', $rich)) {
                         $moderators = [];
                         foreach ($part_v['moderators'] as $moderator_id) {
-                            $moderators[] = $person->getById($moderator_id);
+                            $moderators[] = $this->get($person->base_path . $person->person_path . "/" . $moderator_id);
                         }
                         $data['parts'][$part_k]['moderators'] = $moderators;
                     }
@@ -174,7 +180,7 @@ class SolarEventController extends SolarEventsController
                             if (in_array('speakers', $rich)) {
                                 $speakers = [];
                                 foreach ($scheduleItems_v['speakers'] as $speaker) {
-                                    $speaker['person'] = $person->getById($speaker['person']);
+                                    $speaker['person'] = $this->get($person->base_path . $person->person_path . "/" . $speaker['person']);
                                     $speakers[] = $speaker;
                                     $all_speakers[$speaker['person']['id']] = $speaker;
                                 }
@@ -185,7 +191,6 @@ class SolarEventController extends SolarEventsController
                     }
                 }
             }
-            //$data['responsiblePersons'] = $this->crm->getPersonById($data['responsiblePersons']);
         }
         return $data;
     }

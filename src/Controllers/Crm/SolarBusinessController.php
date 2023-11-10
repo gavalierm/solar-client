@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Http;
 
 class SolarBusinessController extends SolarCrmController
 {
-
     public function search($data)
     {
         return $this->post($this->base_path . $this->business_path . '/search-all', $data);

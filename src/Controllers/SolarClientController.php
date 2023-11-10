@@ -8,25 +8,31 @@ use Kevinrob\GuzzleCache\CacheMiddleware;
 
 class SolarClientController
 {
+    protected static $instance = null;
+
     protected $debug = false;
 
-    protected $scenario;
+    protected $scenario = 'public';
     protected $authorization_atempt = 0;
     protected $headers = ['Content-Type' => 'application/json'];
 
     protected $cache_stack;
     protected $token;
 
-    function __construct($scenario = 'public')
+    public function __construct()
     {
-        $this->scenario = $scenario;
-
         // Create default HandlerStack
         if (!$this->cache_stack) {
             $this->cache_stack = HandlerStack::create();
             // Add this middleware to the top with `push`
             $this->cache_stack->push(new CacheMiddleware(), 'solar_cache');
         }
+    }
+
+    public function setScenario($scenario)
+    {
+        $this->scenario = $scenario;
+        return $this->scenario;
     }
 
     protected function get($path)
@@ -54,7 +60,7 @@ class SolarClientController
         $token = $this->authorize();
 
         if (!isset($token['access_token'])) {
-             return $this->debug ? ["data_error" => 401,"body"=>"No valid token"] : ["data_error" => 401,"body"=>"No valid token"];
+             return $this->debug ? ["data_error" => 401,"body" => "No valid token"] : ["data_error" => 401,"body" => "No valid token"];
         }
 
         try {
@@ -70,7 +76,7 @@ class SolarClientController
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return $this->debug ? ["data_error" => 500,"body"=>$e->getMessage()] : ["data_error" => 500,"body"=>"Server error"];
+            return $this->debug ? ["data_error" => 500,"body" => $e->getMessage()] : ["data_error" => 500,"body" => "Server error"];
         }
 
         if ($response->failed()) {
@@ -78,7 +84,7 @@ class SolarClientController
                 $this->reAuthorize();
                 return $this->call($method, $path, $data);
             }
-            return $this->debug ? ["data_error" => $status,"body"=>$body] : ["data_error" => $status,"body"=>"Something went wrong"];
+            return $this->debug ? ["data_error" => $status,"body" => $body] : ["data_error" => $status,"body" => "Something went wrong"];
         }
         return $body;
     }
@@ -86,7 +92,7 @@ class SolarClientController
     protected function authorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
     {
         if ($this->isAccessTokenValid()) {
-            //return $this->getAccessToken();
+            return $this->getAccessToken();
         }
         return $this->reAuthorize($path, $data);
     }
@@ -193,5 +199,29 @@ class SolarClientController
         return ["Just fine", $this->getConfig($this->scenario, true)];
         //return $this->authorize();
         //return $this->authorize()->json();
+    }
+}
+
+abstract class Singleton
+{
+    protected function __construct()
+    {
+    }
+
+    final public static function getInstance()
+    {
+        static $instances = array();
+
+        $calledClass = get_called_class();
+
+        if (!isset($instances[$calledClass])) {
+            $instances[$calledClass] = new $calledClass();
+        }
+
+        return $instances[$calledClass];
+    }
+
+    final private function __clone()
+    {
     }
 }

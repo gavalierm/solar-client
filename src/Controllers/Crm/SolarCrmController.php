@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 
 class SolarCrmController extends SolarClientController
 {
-    protected $base_path = '/crm/api/v1';
-    protected $people_path = '/people';
-    protected $business_path = '/business-entity';
+    public $base_path = '/crm/api/v1';
+    public $person_path = '/people';
+    public $business_path = '/business-entity';
 }
