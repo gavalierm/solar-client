@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 class SolarPersonController extends SolarCrmController
 {
 
-    public function searchPerson($data)
+    public function search($data)
     {
         return $this->post($this->base_path . $this->people_path . '/search-all', $data);
     }
@@ -24,8 +24,8 @@ class SolarPersonController extends SolarCrmController
     {
         return $this->get($this->base_path . $this->people_path . '/' . $id);
     }
-    public function getPersonAll()
+    public function getAll()
     {
-        return $this->searchPerson([]);
+        return $this->search([]);
     }
 }
