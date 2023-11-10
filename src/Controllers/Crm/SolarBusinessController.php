@@ -18,7 +18,7 @@ class SolarBusinessController extends SolarCrmController
     }
     public function getByEmail($email)
     {
-        return $this->searchPerson(["email" => $email]);
+        return $this->search(["email" => $email]);
     }
     public function getById($id)
     {
