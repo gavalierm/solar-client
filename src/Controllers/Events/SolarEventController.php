@@ -167,27 +167,32 @@ class SolarEventController extends SolarEventsController
                 foreach ($data['parts'] as $part_k => $part_v) {
                     //moderators
                     if (in_array('moderators', $rich)) {
-                        $moderators = [];
-                        foreach ($part_v['moderators'] as $moderator_id) {
-                            $moderators[] = $this->get($person->base_path . $person->person_path . "/" . $moderator_id);
+                        $helper = [];
+                        foreach ($part_v['moderators'] as $value) {
+                            $obj = [];
+                            $obj['person']['id'] = $value; //hack because $value is person direct
+                            $obj['person'] = $this->get($person->base_path . $person->person_path . "/" . $obj['person']['id']);
+                            $obj['additionalInfo'] = (!empty($value['additionalInfo'])) ? $value['additionalInfo'] : null;
+                            $obj['references'] = (!empty($value['references'])) ? $value['references'] : null;
+                            $helper[$obj['person']['id']] = $obj;
                         }
-                        $data['parts'][$part_k]['moderators'] = $moderators;
+                        $data['parts'][$part_k]['moderators'] = $helper;
                     }
+                    //continue;
                     //scheduleItems
                     if (in_array('speakers', $rich)) {
-                        $all_speakers = [];
                         foreach ($part_v['scheduleItems'] as $scheduleItems_k => $scheduleItems_v) {
-                            if (in_array('speakers', $rich)) {
-                                $speakers = [];
-                                foreach ($scheduleItems_v['speakers'] as $speaker) {
-                                    $speaker['person'] = $this->get($person->base_path . $person->person_path . "/" . $speaker['person']);
-                                    $speakers[] = $speaker;
-                                    $all_speakers[$speaker['person']['id']] = $speaker;
-                                }
-                                $data['parts'][$part_k]['scheduleItems'][$scheduleItems_k]['speakers'] = $speakers;
+                            $helper = [];
+                            foreach ($scheduleItems_v['speakers'] as $value) {
+                                $obj = [];
+                                $obj['person']['id'] = $value['person']; //hack
+                                $obj['person'] = $this->get($person->base_path . $person->person_path . "/" . $obj['person']['id']);
+                                $obj['additionalInfo'] = (!empty($value['additionalInfo'])) ? $value['additionalInfo'] : null;
+                                $obj['references'] = (!empty($value['references'])) ? $value['references'] : null;
+                                $helper[$obj['person']['id']] = $obj;
                             }
+                            $data['parts'][$part_k]['scheduleItems'][$scheduleItems_k]['speakers'] = $helper;
                         }
-                        $data['speakers'] = $all_speakers;
                     }
                 }
             }
