@@ -31,7 +31,6 @@ class SolarClientController
 
     public function setScenario($scenario)
     {
-        
         $this->scenario = $scenario;
         return $this->scenario;
     }
