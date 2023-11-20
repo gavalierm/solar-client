@@ -4,7 +4,7 @@ namespace Gavalierm\SolarClient\Controllers\Events;
 
 use Gavalierm\SolarClient\Controllers\Crm\SolarPersonController;
 use Gavalierm\SolarClient\Controllers\Crm\SolarBusinessController;
-use Illuminate\Support\Facades\Http;
+use Gavalierm\SolarClient\Controllers\MediaLibrary\SolarMediaLibraryController;
 
 class SolarEventController extends SolarEventsController
 {
@@ -63,7 +63,6 @@ class SolarEventController extends SolarEventsController
             return $data;
         }
 
-        /**
         if (!empty($filters)) {
             $data_ = [];
             foreach ($data as $item) {
@@ -82,7 +81,7 @@ class SolarEventController extends SolarEventsController
             }
             $data = $data_;
         }
-        **/
+
         return $data;
     }
 
@@ -111,6 +110,7 @@ class SolarEventController extends SolarEventsController
 
         $bussines = new SolarBusinessController();
         $person = new SolarPersonController();
+        $media = new SolarMediaLibraryController();
 
         //responsiblePersons
         if (in_array('responsiblePersons', $rich)) {
@@ -126,7 +126,17 @@ class SolarEventController extends SolarEventsController
         }
 
         //return $data;
-        //eventRateCardItems
+        //references
+        if (in_array('eventPoster', $rich) or in_array('eventPoster', $rich)) {
+            $data['eventPoster'] = [];
+            foreach ($data['references'] as $reference) {
+                // media
+                if (in_array('eventPoster', $rich) and $reference['type'] == 'com.mediasol.solar.medialibrary.model.MediaObject') {
+                    $data['eventPoster'][$reference['pk']] = $this->get($media->base_path . $media->library_path . "/" . $reference['pk']);
+                }
+            }
+        }
+
         if (in_array('eventRateCardItems', $rich)) {
             if (!empty($data['eventRateCardItems'])) {
                 $eventRateCardItems = [];

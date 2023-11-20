@@ -3,7 +3,6 @@
 namespace Gavalierm\SolarClient\Controllers\Events;
 
 use Gavalierm\SolarClient\Controllers\SolarClientController;
-use Illuminate\Support\Facades\Http;
 
 class SolarEventsController extends SolarClientController
 {
