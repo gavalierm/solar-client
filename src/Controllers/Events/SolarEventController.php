@@ -5,208 +5,134 @@ namespace Gavalierm\SolarClient\Controllers\Events;
 use Gavalierm\SolarClient\Controllers\Crm\SolarPersonController;
 use Gavalierm\SolarClient\Controllers\Crm\SolarBusinessController;
 use Gavalierm\SolarClient\Controllers\MediaLibrary\SolarMediaLibraryController;
+use Gavalierm\SolarClient\Controllers\Eshop\SolarEshopController;
 
 class SolarEventController extends SolarEventsController
 {
     public function getBySlug($slug, array $filters = [])
     {
-
-        $data = $this->get($this->base_path . $this->event_path . '/by-slug/' . $slug);
-
-        if (isset($data['data_error'])) {
-            return $data;
-        }
-
-        foreach ($data as $key => $value) {
-            if (isset($filters[$key]) and $filters[$key] !== $value) {
-                return null;
-            }
-        }
-        return $data;
+        return $this->getEventBySlug($slug, $filters);
     }
 
-    public function getById($id, array $filters = [])
+    public function getById($pk, array $filters = [])
     {
-
-        $data = $this->get($this->base_path . $this->event_path . '/' . $id);
-
-        if (isset($data['data_error'])) {
-            return $data;
-        }
-
-        if (!empty($filters)) {
-            foreach ($filters as $key => $value) {
-                if (!isset($data[$key]) or $filters[$key] !== $data[$key]) {
-                    return null;
-                }
-            }
-        }
-
-        return $data;
+        return $this->getEvent($pk, $filters);
     }
 
-    public function getAll(array $filters = [])
+    public function prepareRefs($data, array $to_resolve = ['type'])
     {
-
-
-        $query = http_build_query($filters);
-
-        $path = $this->base_path . $this->event_path . '/get-events' . ((!empty($query)) ? "?" . $query : "");
-
-        //return $path;
-
-        $data = $this->get($path);
-
-        //return $data;
-
-        if (isset($data['data_error'])) {
+        if (empty($to_resolve)) {
             return $data;
         }
-
-        if (!empty($filters)) {
-            $data_ = [];
-            foreach ($data as $item) {
-                if (!empty($filters)) {
-                    foreach ($filters as $key => $value) {
-                        if (is_array($value) and !in_array($item[$key], $value)) {
-                            //or
-                            continue 2;
-                        }
-                        if (!isset($item[$key]) or $filters[$key] !== $item[$key]) {
-                            continue 2;
-                        }
-                    }
-                }
-                $data_[] = $item;
-            }
-            $data = $data_;
-        }
-
-        return $data;
+        return $this->prepareRefsAll([$data], $to_resolve)[0];
     }
 
-    public function richDataAll($data, $rich = [])
+    public function prepareRefsAll($data, array $to_resolve = ['type'])
     {
-
-        if (empty($rich)) {
+        if (empty($to_resolve)) {
             return $data;
         }
 
         $data_ = [];
-
         foreach ($data as $item) {
-            $data_[] = $this->richData($item, $rich);
-        }
+            if (!empty($item['type'])) {
+                if (in_array('type', $to_resolve)) {
+                    $item['type'] = $this->getEventsType($item['type']);
+                    $item['type']['resolved'] = true;
+                } else {
+                    $item['type'] = (!empty($item['type'])) ? ["id" => $item['type'],"resolved" => false] : null;
+                }
+            }
+            //
+            if (!empty($item['responsiblePersons'])) {
+                $helper = [];
+                foreach ($item['responsiblePersons'] as $person) {
+                    $person = $this->determineSubject($person);
 
+                    if (in_array('responsiblePersons', $to_resolve) and $person["resolved"] !== true) {
+                        $person["resolved"] = true;
+                    }
+                    $helper[] = $person;
+                }
+                $item['responsiblePersons'] = $helper;
+            }
+
+            //partners
+            if (!empty($item['partners'])) {
+                $helper = [];
+                foreach ($item['partners'] as $partner) {
+                    $partner = $this->determineSubject($partner);
+
+                    if (in_array('partners', $to_resolve) and $partner["resolved"] !== true) {
+                        $partner["resolved"] = true;
+                    }
+                    $helper[] = $partner;
+                }
+                $item['partners'] = $helper;
+            }
+
+            if (!empty($item['parts'])) {
+                $helper = [];
+                foreach ($item['parts'] as $key => $part) {
+                    //moderators
+                    $moderators = [];
+                    foreach ($part['moderators'] as $moderator) {
+                        $moderator = $this->determineSubject($moderator);
+
+                        if (in_array('moderators', $to_resolve) and $moderator["resolved"] !== true) {
+                            $moderator["resolved"] = true;
+                        }
+                        $moderators[] = $moderator;
+                    }
+                    $part['moderators'] = $moderators;
+                    //speakers
+                    $scheduleItems = [];
+                    foreach ($part['scheduleItems'] as $scheduleItem) {
+                        $speakers = [];
+                        foreach ($scheduleItem['speakers'] as $speaker) {
+                            $speaker = $this->determineSubject($speaker);
+
+                            if (in_array('moderators', $to_resolve) and $speaker["resolved"] !== true) {
+                                $speaker["resolved"] = true;
+                            }
+                            $speakers[] = $speaker;
+                        }
+                        $scheduleItem['speakers'] = $speakers;
+                        $scheduleItems[] = $scheduleItem;
+                    }
+                    $part['scheduleItems'] = $scheduleItems;
+
+
+                    //
+                    $helper[] = $part;
+                }
+                $item['parts'] = $helper;
+            }
+            //
+            $data_[] = $item;
+        }
         return $data_;
     }
 
-    public function richData($data, $rich = [])
+    private function determineSubject($subject)
     {
-
-        if (empty($rich)) {
-            return $data;
+        if (empty($subject)) {
+            return $subject;
+        }
+        if (is_array($subject) and isset($subject['subject']) and is_array($subject['subject']) and isset($subject['subject']['pk'])) {
+            $subject['subject'] = $subject['subject'];
+        } elseif (is_array($subject) and is_array($subject['person']) and isset($subject['person']['pk'])) {
+            $subject['subject'] = $subject['person'];
+            unset($subject['person']);
+        } elseif (is_array($subject) and is_string($subject['person'])) {
+            $subject['subject'] = ["pk" => $subject['person']];
+            unset($subject['person']);
+        } elseif (is_string($subject)) {
+            $subject = ["subject" => ["pk" => $subject]];
         }
 
-        $bussines = new SolarBusinessController();
-        $person = new SolarPersonController();
-        $media = new SolarMediaLibraryController();
-
-        //responsiblePersons
-        if (in_array('responsiblePersons', $rich)) {
-            if (!empty($data['responsiblePersons'])) {
-                $persons = [];
-                foreach ($data['responsiblePersons'] as $person_pk) {
-                    $persons[] = $this->get($person->base_path . $person->person_path . "/" . $person_pk);
-                }
-                $data['responsiblePersons'] = $persons;
-            }
-        } else {
-            $data['responsiblePersons'] = [];
-        }
-
-        //return $data;
-        //references
-        if (in_array('eventPoster', $rich) or in_array('eventPoster', $rich)) {
-            $data['eventPoster'] = [];
-            foreach ($data['references'] as $reference) {
-                // media
-                if (in_array('eventPoster', $rich) and $reference['type'] == 'com.mediasol.solar.medialibrary.model.MediaObject') {
-                    $data['eventPoster'][$reference['pk']] = $this->get($media->base_path . $media->library_path . "/" . $reference['pk']);
-                }
-            }
-        }
-
-        if (in_array('eventRateCardItems', $rich)) {
-            if (!empty($data['eventRateCardItems'])) {
-                $eventRateCardItems = [];
-                foreach ($data['eventRateCardItems'] as $eventRateCardItems_id) {
-                    //$eventRateCardItems[] = $this->get();
-                }
-                $data['eventRateCardItems'] = $eventRateCardItems;
-            }
-        }
-
-        //partners
-        if (in_array('partners', $rich)) {
-            if (!empty($data['partners'])) {
-                $partners = [];
-                foreach ($data['partners'] as $partner) {
-                    $type = $partner['subject']['type'];
-
-                    switch ($type) {
-                        case 'com.mediasol.solar.crm.be.model.BusinessEntity':
-                            $partner['subject'] = $this->get($bussines->base_path . $bussines->business_path . "/" . $partner['subject']['pk']);
-                            break;
-                        case 'com.mediasol.solar.crm.people.model.PersonImpl':
-                            $partner['subject'] = $this->get($person->base_path . $person->person_path . "/" . $partner['subject']['pk']);
-                            break;
-                    }
-                    //resolved subject do not have type need to be refilled again
-                    $partner_['subject']['type'] = $type;
-                    $partners[] = $partner;
-                }
-                $data['partners'] = $partners;
-            }
-        }
-
-        //return $data;
-        //parts
-        if (in_array('moderators', $rich) or in_array('speakers', $rich)) {
-            if (!empty($data['parts'])) {
-                foreach ($data['parts'] as $part_k => $part_v) {
-                    //moderators
-                    if (in_array('moderators', $rich)) {
-                        $helper = [];
-                        foreach ($part_v['moderators'] as $value) {
-                            $obj = [];
-                            $obj['person']['id'] = $value; //hack because $value is person direct
-                            $obj['person'] = $this->get($person->base_path . $person->person_path . "/" . $obj['person']['id']);
-                            $obj['additionalInfo'] = (!empty($value['additionalInfo'])) ? $value['additionalInfo'] : null;
-                            $obj['references'] = (!empty($value['references'])) ? $value['references'] : null;
-                            $helper[$obj['person']['id']] = $obj;
-                        }
-                        $data['parts'][$part_k]['moderators'] = $helper;
-                    }
-                    //continue;
-                    //scheduleItems
-                    if (in_array('speakers', $rich)) {
-                        foreach ($part_v['scheduleItems'] as $scheduleItems_k => $scheduleItems_v) {
-                            $helper = [];
-                            foreach ($scheduleItems_v['speakers'] as $value) {
-                                $obj = [];
-                                $obj['person']['id'] = $value['person']; //hack
-                                $obj['person'] = $this->get($person->base_path . $person->person_path . "/" . $obj['person']['id']);
-                                $obj['additionalInfo'] = (!empty($value['additionalInfo'])) ? $value['additionalInfo'] : null;
-                                $obj['references'] = (!empty($value['references'])) ? $value['references'] : null;
-                                $helper[$obj['person']['id']] = $obj;
-                            }
-                            $data['parts'][$part_k]['scheduleItems'][$scheduleItems_k]['speakers'] = $helper;
-                        }
-                    }
-                }
-            }
-        }
-        return $data;
+        $subject['subject']['type'] = (!empty($subject['subject']['type'])) ? $subject['subject']['type'] : "com.mediasol.solar.crm.people.model.PersonImpl";
+        $subject['resolved'] = false;
+        return $subject;
     }
 }

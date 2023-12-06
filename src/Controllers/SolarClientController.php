@@ -35,25 +35,26 @@ class SolarClientController
         return $this->scenario;
     }
 
-    protected function get($path)
+    public function get($path)
     {
         return $this->call('get', $path);
     }
 
-    protected function post($path, $data)
+    public function post($path, $data)
     {
         return $this->call('post', $path);
     }
 
-    protected function put($path, $data)
+    public function put($path, $data)
     {
         return $this->call('put', $path);
     }
 
-    protected function delete($path)
+    public function delete($path)
     {
         return $this->call('delete', $path);
     }
+
 
     protected function call($method, $path, $data = null, $options = [])
     {
@@ -64,7 +65,10 @@ class SolarClientController
         }
 
         try {
-            $call = Http::{ $this->scenario }()->withOptions(['handler' => $this->cache_stack])->withToken($token['access_token'])->withHeaders($this->headers);
+            $config = $this->getConfig($this->scenario, true);
+            $call = Http::baseUrl($config['host'])->withOptions(['handler' => $this->cache_stack])->withToken($token['access_token'])->withHeaders($this->headers);
+            //with macro see service provider
+            //$call = Http::{ $this->scenario }()->withOptions(['handler' => $this->cache_stack])->withToken($token['access_token'])->withHeaders($this->headers);
 
             if ($data) {
                 $response = $call->{$method}($path, $data);
@@ -72,7 +76,6 @@ class SolarClientController
                 $response = $call->{$method}($path);
             }
 
-            $body = $response->json();
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
@@ -84,8 +87,16 @@ class SolarClientController
                 $this->reAuthorize();
                 return $this->call($method, $path, $data);
             }
-            return $this->debug ? ["data_error" => $status,"body" => $body] : ["data_error" => $status,"body" => "Something went wrong"];
+            return $this->debug ? ["data_error" => $status,"body" => $response->getBody()] : ["data_error" => $status,"body" => "Something went wrong"];
         }
+
+        if (str_contains($headers['Content-Type'][0], "json")) {
+            $body = $response->json();
+        } else {
+            $body = $response->getBody();
+            return response($body, $status)->withHeaders(["Content-Length" => strlen($body),"Content-type" => $headers['Content-Type'][0]]);
+        }
+
         return $body;
     }
 
@@ -100,15 +111,14 @@ class SolarClientController
     protected function reAuthorize($path = '/auth/token', $data = ["grant_type" => "client_credentials"])
     {
 
+        //echo "reAuthorize";die();
         $this->authorization_atempt++;
 
         $this->clearAccessToken();
 
         try {
-            $user = config('solar_client.' . $this->scenario . '.user') ?: (config('solar_client.default.user') ?: '');
-            $pass = config('solar_client.' . $this->scenario . '.pass') ?: (config('solar_client.default.pass') ?: '');
-
-            $response = Http::{ $this->scenario }()->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth($user, $pass)->asForm()->post($path, $data);
+            $config = $this->getConfig($this->scenario, true);
+            $response = Http::baseUrl($config['host'])->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth($config['user'], $config['pass'])->asForm()->post($path, $data);
 
             $body = $response->json();
             $status = $response->getStatusCode();
@@ -150,7 +160,10 @@ class SolarClientController
         //hack modify expires in when access token
         $access_token = session('solar_session.access_token');
 
+        $access_token['revalidated'] = false;
+
         $access_token['expires_in'] = $access_token['valid_until'] - intval(time());
+        $access_token['valid_until_date'] = date("Y-m-d H:i:s", $access_token['valid_until']);
 
         session(['solar_session.access_token' => $access_token]);
 
@@ -160,7 +173,8 @@ class SolarClientController
     protected function setAccessToken($access_token)
     {
         $access_token['valid_until'] = strtotime('+' . (intval($access_token['expires_in']) - 360) . ' second');
-
+        $access_token['valid_until_date'] = date("Y-m-d H:i:s", $access_token['valid_until']);
+        $access_token['revalidated'] = true;
         session(['solar_session.access_token' => $access_token]);
 
         return $access_token;
@@ -172,56 +186,88 @@ class SolarClientController
         return null;
     }
 
-    public function getConfig($scenario = null, $hidden = false)
+    protected function getConfig($scenario = "default", $show = false)
     {
         $config = config('solar_client');
 
-        if ($hidden) {
-            foreach ($config as $k => $v) {
-                $config[$k]['user'] = "****";
-                $config[$k]['pass'] = "****";
+        if ($scenario == "default" && (empty($config[$scenario]) or empty($config[$scenario]['host']))) {
+            return null;
+        }
+
+        if (empty($config[$scenario]) or empty($config[$scenario]['host'])) {
+            return $this->getConfig("default", $show);
+        }
+
+        foreach ($config as $k => $v) {
+            $config[$k]['scenario'] = $k;
+            if ($show !== true) {
+                if (isset($config[$k]['user'])) {
+                    $config[$k]['user'] = "****";
+                }
+                if (isset($config[$k]['pass'])) {
+                    $config[$k]['pass'] = "****";
+                }
             }
         }
 
-        if ($scenario) {
-            return $config[$scenario];
+        if ($scenario == "all") {
+            return $config;
         }
-        return $config;
+        return $config[$scenario];
+    }
+
+    public function fiiterItem($data, array $filters = [])
+    {
+        return $this->filterItems([$data], $filters)[0];
+    }
+    public function filterItems($data, array $filters = [])
+    {
+        if (empty($filters) or !is_array($data)) {
+            return $data;
+        }
+
+        //return [is_array($data),$filters,$data];
+        $data_ = [];
+        foreach ($data as $item) {
+            if (!empty($filters)) {
+                foreach ($filters as $key => $value) {
+                    if (is_array($value) and !in_array($item[$key], $value)) {
+                        //or
+                        continue 2;
+                    }
+                    if (!isset($item[$key]) or $filters[$key] !== $item[$key]) {
+                        continue 2;
+                    }
+                }
+            }
+            $data_[] = $item;
+        }
+        return $data_;
     }
 
     public function setDebug(bool $debug)
     {
         $this->debug = $debug;
+        return $this->debug;
+    }
+
+    public function getDebug()
+    {
+        return $this->debug;
+    }
+
+    public function getInstance()
+    {
+        return $this;
     }
 
     public function test()
     {
-        return ["Just fine", $this->getConfig($this->scenario, true)];
-        //return $this->authorize();
-        //return $this->authorize()->json();
-    }
-}
-
-abstract class Singleton
-{
-    protected function __construct()
-    {
-    }
-
-    final public static function getInstance()
-    {
-        static $instances = array();
-
-        $calledClass = get_called_class();
-
-        if (!isset($instances[$calledClass])) {
-            $instances[$calledClass] = new $calledClass();
-        }
-
-        return $instances[$calledClass];
-    }
-
-    final private function __clone()
-    {
+        $data = [];
+        $data['scenario'] = $this->scenario;
+        $data['config'] = $this->getConfig();
+        //$data['clear'] = $this->clearAccessToken();
+        $data['authorize'] = $this->authorize();
+        return $data;
     }
 }

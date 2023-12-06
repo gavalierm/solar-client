@@ -26,6 +26,8 @@ class SolarClientServiceProvider extends ServiceProvider
             $this->loadRoutesFrom(__DIR__ . '/routes/web.php');
         });
 
+        /**
+        // macros
         Http::macro('demo', function () {
             return Http::baseUrl(config('solar_client.demo.host') ?: config('solar_client.default.host'));
         });
@@ -37,6 +39,7 @@ class SolarClientServiceProvider extends ServiceProvider
         Http::macro('public', function () {
             return Http::baseUrl(config('solar_client.public.host') ?: config('solar_client.default.host'));
         });
+        **/
     }
 
     /**
