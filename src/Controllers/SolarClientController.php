@@ -94,6 +94,9 @@ class SolarClientController
             $body = $response->json();
         } else {
             $body = $response->getBody();
+            foreach($headers['Content-Type'] as $i => $v){
+                $headers['Content-Type'][$i] = str_replace(" ", "+", $v);
+            }
             return response($body, $status)->withHeaders(["Content-Length" => strlen($body),"Content-type" => $headers['Content-Type'][0]]);
         }
 
