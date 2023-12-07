@@ -24,14 +24,6 @@ class SolarEventController extends SolarEventsController
         if (empty($to_resolve)) {
             return $data;
         }
-        return $this->prepareRefsAll([$data], $to_resolve)[0];
-    }
-
-    public function prepareRefsAll($data, array $to_resolve = ['type'])
-    {
-        if (empty($to_resolve)) {
-            return $data;
-        }
 
         $data_ = [];
         foreach ($data as $item) {
