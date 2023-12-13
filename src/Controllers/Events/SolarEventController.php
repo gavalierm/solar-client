@@ -65,6 +65,8 @@ class SolarEventController extends SolarEventsController
 
             if (!empty($item['parts'])) {
                 $helper = [];
+                $item['moderators'] = [];
+                $item['speakers'] = [];
                 foreach ($item['parts'] as $key => $part) {
                     //moderators
                     $moderators = [];
@@ -75,8 +77,10 @@ class SolarEventController extends SolarEventsController
                             $moderator["resolved"] = true;
                         }
                         $moderators[] = $moderator;
+                        $item['moderators'][$moderator['subject']['pk']] = $moderator;
                     }
                     $part['moderators'] = $moderators;
+                    
                     //speakers
                     $scheduleItems = [];
                     foreach ($part['scheduleItems'] as $scheduleItem) {
@@ -88,6 +92,7 @@ class SolarEventController extends SolarEventsController
                                 $speaker["resolved"] = true;
                             }
                             $speakers[] = $speaker;
+                            $item['speakers'][$speaker['subject']['pk']] = $speaker;
                         }
                         $scheduleItem['speakers'] = $speakers;
                         $scheduleItems[] = $scheduleItem;
