@@ -5,18 +5,18 @@ namespace Gavalierm\SolarClient\Controllers\Eshop;
 use Gavalierm\SolarClient\Controllers\SolarClientController;
 use Illuminate\Support\Facades\Http;
 
-    //use Illuminate\Http\Request;
+//use Illuminate\Http\Request;
 
-    //use Acme\PageReview\Models\Page;
-    //use Illuminate\Routing\Controller;
-    //use Pusher\Laravel\Facades\Pusher;
+//use Acme\PageReview\Models\Page;
+//use Illuminate\Routing\Controller;
+//use Pusher\Laravel\Facades\Pusher;
 
 class SolarEshopController
 {
-    private $client = null;
+    protected $client = null;
     private $debug = null;
 
-    public $base_path = '/eshop/api/v1/';
+    public $base_path = '/eshop/api/v1';
     public $site_path = '/sites/site';
     public $images_path = '/sites/image'; //?id=id&entityName=entityName&contentType=image/png
 
@@ -32,6 +32,11 @@ class SolarEshopController
         if ($this->client) {
             $this->debug = $this->client->getDebug();
         }
+    }
+
+    public function getDebug()
+    {
+        return $this->debug;
     }
 
     public function setDebug(bool $debug)

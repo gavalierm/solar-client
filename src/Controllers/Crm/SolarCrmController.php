@@ -6,7 +6,7 @@ use Gavalierm\SolarClient\Controllers\SolarClientController;
 
 class SolarCrmController
 {
-    private $client = null;
+    protected $client = null;
     private $debug = null;
 
     public $base_path = '/crm/api/v1';

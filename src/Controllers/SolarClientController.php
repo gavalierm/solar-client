@@ -10,7 +10,7 @@ class SolarClientController
 {
     protected static $instance = null;
 
-    public $debug = false;
+    protected $debug = false;
 
     protected $scenario = 'public';
     protected $authorization_atempt = 0;
@@ -229,10 +229,6 @@ class SolarClientController
         return $config[$scenario];
     }
 
-    public function fiiterItem($data, array $filters = [])
-    {
-        return $this->filterItems([$data], $filters)[0];
-    }
     public function filterItems($data, array $filters = [])
     {
         if (empty($filters) or !is_array($data)) {
