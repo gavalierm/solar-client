@@ -74,7 +74,7 @@ class SolarCrmController
         $data = $this->get($this->base_path . $this->person_path . '/' . $pk . '?' . $query);
 
         if (isset($data['data_error'])) {
-            return $data;
+            return null;
         }
 
         //because query do not have implemted all filters we need to filter out unwanted items
@@ -92,7 +92,7 @@ class SolarCrmController
         $data = $this->get($this->base_path . $this->business_path . '/' . $pk . '?' . $query);
 
         if (isset($data['data_error'])) {
-            return $data;
+            return null;
         }
 
         //because query do not have implemted all filters we need to filter out unwanted items

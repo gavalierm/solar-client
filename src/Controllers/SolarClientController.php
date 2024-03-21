@@ -19,6 +19,8 @@ class SolarClientController
     protected $cache_stack;
     protected $token;
 
+    public $cache;
+
     public function __construct()
     {
         // Create default HandlerStack
@@ -27,6 +29,14 @@ class SolarClientController
             // Add this middleware to the top with `push`
             $this->cache_stack->push(new CacheMiddleware(), 'solar_cache');
         }
+    }
+
+    public function cache($store)
+    {
+        if (is_array($store)) {
+            session($store);
+        }
+        return session($store);
     }
 
     public function setScenario($scenario)
@@ -61,7 +71,7 @@ class SolarClientController
         $token = $this->authorize();
 
         if (!isset($token['access_token'])) {
-             return $this->debug ? ["data_error" => 401,"body" => "No valid token"] : ["data_error" => 401,"body" => "No valid token"];
+            return $this->debug ? ["data_error" => 401, "body" => "No valid token"] : ["data_error" => 401, "body" => "No valid token"];
         }
 
         try {
@@ -79,7 +89,7 @@ class SolarClientController
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return $this->debug ? ["data_error" => 500,"body" => $e->getMessage()] : ["data_error" => 500,"body" => "Server error"];
+            return $this->debug ? ["data_error" => 500, "body" => $e->getMessage()] : ["data_error" => 500, "body" => "Server error"];
         }
 
         if ($response->failed()) {
@@ -87,17 +97,17 @@ class SolarClientController
                 $this->reAuthorize();
                 return $this->call($method, $path, $data);
             }
-            return $this->debug ? ["data_error" => $status,"body" => $response->getBody()] : ["data_error" => $status,"body" => "Something went wrong"];
+            return $this->debug ? ["data_error" => $status, "body" => $response->getBody()] : ["data_error" => $status, "body" => "Something went wrong"];
         }
 
         if (str_contains($headers['Content-Type'][0], "json")) {
             $body = $response->json();
         } else {
             $body = $response->getBody();
-            foreach($headers['Content-Type'] as $i => $v){
+            foreach ($headers['Content-Type'] as $i => $v) {
                 $headers['Content-Type'][$i] = str_replace(" ", "+", $v);
             }
-            return response($body, $status)->withHeaders(["Content-Length" => strlen($body),"Content-type" => $headers['Content-Type'][0]]);
+            return response($body, $status)->withHeaders(["Content-Length" => strlen($body), "Content-type" => $headers['Content-Type'][0]]);
         }
 
         return $body;
@@ -127,11 +137,11 @@ class SolarClientController
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return $this->debug ? ["data_error" => 500,$e->getMessage()] : ["data_error" => 500,"Server error"];
+            return $this->debug ? ["data_error" => 500, $e->getMessage()] : ["data_error" => 500, "Server error"];
         }
 
         if ($response->failed()) {
-            return $this->debug ? [$status,$body] : [$status,"Something went wrong"];
+            return $this->debug ? [$status, $body] : [$status, "Something went wrong"];
         }
 
         $this->authorization_atempt = 0;
@@ -248,6 +258,27 @@ class SolarClientController
         return $data_;
     }
 
+    public function unifySubject($subject)
+    {
+        if (empty($subject)) {
+            return $subject;
+        }
+        if (is_array($subject) and isset($subject['subject']) and is_array($subject['subject']) and isset($subject['subject']['pk'])) {
+            $subject['subject'] = $subject['subject'];
+        } elseif (is_array($subject) and is_array($subject['person']) and isset($subject['person']['pk'])) {
+            $subject['subject'] = $subject['person'];
+            unset($subject['person']);
+        } elseif (is_array($subject) and is_string($subject['person'])) {
+            $subject['subject'] = ["pk" => $subject['person']];
+            unset($subject['person']);
+        } elseif (is_string($subject)) {
+            $subject = ["subject" => ["pk" => $subject]];
+        }
+
+        $subject['subject']['type'] = (!empty($subject['subject']['type'])) ? $subject['subject']['type'] : "com.mediasol.solar.crm.people.model.PersonImpl";
+        //$subject['resolved'] = false;
+        return $subject;
+    }
     public function setDebug(bool $debug)
     {
         $this->debug = $debug;
@@ -271,6 +302,7 @@ class SolarClientController
         $data['config'] = $this->getConfig();
         //$data['clear'] = $this->clearAccessToken();
         $data['authorize'] = $this->authorize();
+        $data['authorize']['access_token'] = '****';
         return $data;
     }
 }

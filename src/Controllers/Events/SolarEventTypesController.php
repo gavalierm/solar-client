@@ -16,7 +16,7 @@ class SolarEventTypesController extends SolarEventsController
         $data = $this->get($this->base_path . $this->event_types_path . '/', $slug);
 
         if (isset($data['data_error'])) {
-            return $data;
+            return null;
         }
 
         foreach ($data as $key => $value) {
@@ -49,6 +49,63 @@ class SolarEventTypesController extends SolarEventsController
 
     public function richData($data, $rich = [])
     {
+        return $data;
+    }
+
+    public function getEventTypes(array $filters = [])
+    {
+        // /events/api/v1/events/event-types?page=0&size=100
+        $query = http_build_query($filters);
+
+        $data = $this->get($this->base_path . $this->get_events_types_path . '?' . $query);
+
+        if (isset($data['data_error'])) {
+            return null;
+        }
+
+        //because query do not have implemted all filters we need to filter out unwanted items
+        if (!empty($filters)) {
+            $data = $this->client->filterItems($data, $filters);
+        }
+
+        return $data;
+    }
+
+    public function getEventType($pk, array $filters = [])
+    {
+        // /events/api/v1/events/event-types?page=0&size=100
+        $query = http_build_query($filters);
+
+        $data = $this->get($this->base_path . $this->get_events_types_path . '/' . $pk . '?' . $query);
+
+        if (isset($data['data_error'])) {
+            return null;
+        }
+
+        //because query do not have implemted all filters we need to filter out unwanted items
+        if (!empty($filters)) {
+            $data = $this->client->filterItems($data, $filters);
+        }
+
+        return $data;
+    }
+
+    public function issueManualInvoice($pk, array $filters = [])
+    {
+        ///events/api/v1/events/issue-manual-invoice?bookingPk=bookingID1
+        $query = http_build_query($filters);
+
+        $data = $this->get($this->base_path . $this->get_events_issue_manual_invoice_path . '?bookingPk=' . $pk . '&' . $query);
+
+        if (isset($data['data_error'])) {
+            return null;
+        }
+
+        //because query do not have implemted all filters we need to filter out unwanted items
+        if (!empty($filters)) {
+            $data = $this->client->filterItems($data, $filters);
+        }
+
         return $data;
     }
 }
