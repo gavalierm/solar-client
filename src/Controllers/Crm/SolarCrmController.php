@@ -10,7 +10,7 @@ class SolarCrmController
     private $debug = null;
 
     public $base_path = '/crm/api/v1';
-    public $person_path = '/people';
+    public $people_path = '/people';
     public $business_path = '/business-entity';
 
     public function __construct($client = null)
@@ -27,9 +27,18 @@ class SolarCrmController
 
     public function setDebug(bool $debug)
     {
-        $this->debug = $debug;
         if ($this->client) {
             $this->debug = $this->client->setDebug($debug);
+        } else {
+            $this->debug = $debug;
+        }
+        return $this->debug;
+    }
+
+    public function getDebug()
+    {
+        if ($this->client) {
+            $this->debug = $this->client->getDebug();
         }
         return $this->debug;
     }
@@ -64,42 +73,5 @@ class SolarCrmController
             return null;
         }
         return $this->client->delete($path);
-    }
-
-    public function getPerson($pk, array $filters = [])
-    {
-        $query = http_build_query($filters);
-
-        //pozor tu neni sub path, staci base
-        $data = $this->get($this->base_path . $this->person_path . '/' . $pk . '?' . $query);
-
-        if (isset($data['data_error'])) {
-            return null;
-        }
-
-        //because query do not have implemted all filters we need to filter out unwanted items
-        if (!empty($filters)) {
-            $data = $this->client->fiiterItem($data, $filters);
-        }
-
-        return $data;
-    }
-    public function getBusinessEntity($pk, array $filters = [])
-    {
-        $query = http_build_query($filters);
-
-        //pozor tu neni sub path, staci base
-        $data = $this->get($this->base_path . $this->business_path . '/' . $pk . '?' . $query);
-
-        if (isset($data['data_error'])) {
-            return null;
-        }
-
-        //because query do not have implemted all filters we need to filter out unwanted items
-        if (!empty($filters)) {
-            $data = $this->client->fiiterItem($data, $filters);
-        }
-
-        return $data;
     }
 }

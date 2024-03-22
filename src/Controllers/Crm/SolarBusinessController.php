@@ -11,20 +11,27 @@ class SolarBusinessController extends SolarCrmController
         return $this->post($this->base_path . $this->business_path . '/search-all', $data);
     }
 
-    public function getBySlug($slug)
-    {
-        return $this->get($this->base_path . $this->business_path . '/', $slug);
-    }
     public function getByEmail($email)
     {
         return $this->search(["email" => $email]);
     }
-    public function getById($id)
+
+    public function getBusinessEntityById($pk, array $filters = [])
     {
-        return $this->get($this->base_path . $this->business_path . '/' . $id);
-    }
-    public function getAll()
-    {
-        return $this->search([]);
+        $query = http_build_query($filters);
+
+        //pozor tu neni sub path, staci base
+        $data = $this->get($this->base_path . $this->business_path . '/' . $pk . '?' . $query);
+
+        if (isset($data['data_error'])) {
+            return null;
+        }
+
+        //because query do not have implemted all filters we need to filter out unwanted items
+        if (!empty($filters)) {
+            $data = $this->client->filterItems($data, $filters);
+        }
+
+        return $data;
     }
 }

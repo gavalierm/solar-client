@@ -30,9 +30,18 @@ class SolarEventsController
 
     public function setDebug(bool $debug)
     {
-        $this->debug = $debug;
         if ($this->client) {
             $this->debug = $this->client->setDebug($debug);
+        } else {
+            $this->debug = $debug;
+        }
+        return $this->debug;
+    }
+
+    public function getDebug()
+    {
+        if ($this->client) {
+            $this->debug = $this->client->getDebug();
         }
         return $this->debug;
     }

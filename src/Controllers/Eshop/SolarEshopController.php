@@ -34,16 +34,20 @@ class SolarEshopController
         }
     }
 
-    public function getDebug()
+    public function setDebug(bool $debug)
     {
+        if ($this->client) {
+            $this->debug = $this->client->setDebug($debug);
+        } else {
+            $this->debug = $debug;
+        }
         return $this->debug;
     }
 
-    public function setDebug(bool $debug)
+    public function getDebug()
     {
-        $this->debug = $debug;
         if ($this->client) {
-            $this->debug = $this->client->setDebug($debug);
+            $this->debug = $this->client->getDebug();
         }
         return $this->debug;
     }

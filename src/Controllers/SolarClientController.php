@@ -10,7 +10,7 @@ class SolarClientController
 {
     protected static $instance = null;
 
-    protected $debug = false;
+    private $debug = false;
 
     protected $scenario = 'public';
     protected $authorization_atempt = 0;
