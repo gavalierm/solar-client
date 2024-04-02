@@ -1,9 +1,6 @@
 <?php
 
 use Gavalierm\SolarClient\Controllers\SolarClientController;
-//use Gavalierm\SolarClient\Controllers\CrmSolarClientController;
-//use App\Http\Controllers\SolarClientController;
-//use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return ["Solar extension installed."];

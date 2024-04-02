@@ -12,7 +12,6 @@ class SolarClientController
 
     private $debug = false;
 
-    protected $scenario = 'public';
     protected $authorization_atempt = 0;
     protected $headers = ['Content-Type' => 'application/json'];
 
@@ -37,12 +36,6 @@ class SolarClientController
             session($store);
         }
         return session($store);
-    }
-
-    public function setScenario($scenario)
-    {
-        $this->scenario = $scenario;
-        return $this->scenario;
     }
 
     public function get($path)
@@ -75,11 +68,8 @@ class SolarClientController
         }
 
         try {
-            $config = $this->getConfig($this->scenario, true);
-            $call = Http::baseUrl($config['host'])->withOptions(['handler' => $this->cache_stack])->withToken($token['access_token'])->withHeaders($this->headers);
-            //with macro see service provider
-            //$call = Http::{ $this->scenario }()->withOptions(['handler' => $this->cache_stack])->withToken($token['access_token'])->withHeaders($this->headers);
-
+            $config = $this->getConfig(true);
+            $call = Http::baseUrl($config['credentials']['host'])->withOptions(['handler' => $this->cache_stack])->withToken($token['access_token'])->withHeaders($this->headers);
             if ($data) {
                 $response = $call->{$method}($path, $data);
             } else {
@@ -130,8 +120,8 @@ class SolarClientController
         $this->clearAccessToken();
 
         try {
-            $config = $this->getConfig($this->scenario, true);
-            $response = Http::baseUrl($config['host'])->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth($config['user'], $config['pass'])->asForm()->post($path, $data);
+            $config = $this->getConfig(true);
+            $response = Http::baseUrl($config['credentials']['host'])->withHeaders(['Cache-Control' => 'no-cache'])->withBasicAuth($config['credentials']['user'], $config['credentials']['pass'])->asForm()->post($path, $data);
 
             $body = $response->json();
             $status = $response->getStatusCode();
@@ -199,34 +189,20 @@ class SolarClientController
         return null;
     }
 
-    protected function getConfig($scenario = "default", $show = false)
+    protected function getConfig($visible_credentials = false)
     {
         $config = config('solar_client');
 
-        if ($scenario == "default" && (empty($config[$scenario]) or empty($config[$scenario]['host']))) {
-            return null;
-        }
-
-        if (empty($config[$scenario]) or empty($config[$scenario]['host'])) {
-            return $this->getConfig("default", $show);
-        }
-
-        foreach ($config as $k => $v) {
-            $config[$k]['scenario'] = $k;
-            if ($show !== true) {
-                if (isset($config[$k]['user'])) {
-                    $config[$k]['user'] = "****";
-                }
-                if (isset($config[$k]['pass'])) {
-                    $config[$k]['pass'] = "****";
-                }
+        if ($visible_credentials !== true) {
+            if (isset($config['credentials']['user'])) {
+                $config['credentials']['user'] = "****";
+            }
+            if (isset($config['credentials']['pass'])) {
+                $config['credentials']['pass'] = "****";
             }
         }
 
-        if ($scenario == "all") {
-            return $config;
-        }
-        return $config[$scenario];
+        return $config;
     }
 
     public function filterItems($data, array $filters = [])
@@ -294,7 +270,6 @@ class SolarClientController
     public function test()
     {
         $data = [];
-        $data['scenario'] = $this->scenario;
         $data['config'] = $this->getConfig();
         //$data['clear'] = $this->clearAccessToken();
         $data['authorize'] = $this->authorize();
