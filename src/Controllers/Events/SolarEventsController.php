@@ -11,10 +11,10 @@ class SolarEventsController
 
     public $base_path = '/events/api/v1/events';
     public $get_event_by_slug_path = '/by-slug';
-    public $get_events_path = '/get-events';
+    public $get_all_events_path = '/get-events';
     public $get_events_types_path = '/event-types';
-    public $post_events_create_bookings_path = '/create-bookings';
     public $get_events_issue_manual_invoice_path = '/issue-manual-invoice';
+    public $post_events_create_bookings_path = '/create-bookings';
 
     public function __construct($client = null)
     {
