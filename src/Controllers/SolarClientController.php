@@ -18,8 +18,6 @@ class SolarClientController
     protected $cache_stack;
     protected $token;
 
-    public $cache;
-
     public function __construct()
     {
         // Create default HandlerStack
@@ -28,6 +26,17 @@ class SolarClientController
             // Add this middleware to the top with `push`
             $this->cache_stack->push(new CacheMiddleware(), 'solar_cache');
         }
+    }
+
+    public function debugCache($action = null)
+    {
+        if ($action == 'clear') {
+            session()->forget('cache');
+        }
+        $ss = session()->all();
+        unset($ss['solar_session']);
+        unset($ss['_token']);
+        return ['/events', '/solar/cache/clear', $ss];
     }
 
     public function cache($store)

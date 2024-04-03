@@ -12,4 +12,5 @@ Route::get('get', function () {
     return $solar->get($call[1]);
 })->name('solar.path');
 
+Route::get('cache/{action?}', [SolarClientController::class, 'debugCache'])->name('solar.debugCache');
 Route::get('test', [SolarClientController::class, 'test'])->name('solar.test');
