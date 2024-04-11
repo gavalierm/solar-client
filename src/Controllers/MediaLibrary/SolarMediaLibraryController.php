@@ -88,9 +88,13 @@ class SolarMediaLibraryController
 
         //because query do not have implemted all filters we need to filter out unwanted items
         if (!empty($filters)) {
-            $data = $this->client->fiiterItem($data, $filters);
+            $data = $this->client->filterItem($data, $filters);
         }
 
         return $data;
+    }
+
+    public function image(){
+        return $this->getMediaObject('657194e789e4615a2626d199');
     }
 }

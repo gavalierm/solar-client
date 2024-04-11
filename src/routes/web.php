@@ -1,6 +1,8 @@
 <?php
 
 use Gavalierm\SolarClient\Controllers\SolarClientController;
+use Gavalierm\SolarClient\Controllers\Eshop\SolarSitesController;
+
 
 Route::get('/', function () {
     return ["Solar extension installed."];
@@ -14,3 +16,6 @@ Route::get('get', function () {
 
 Route::get('cache/{action?}', [SolarClientController::class, 'debugCache'])->name('solar.debugCache');
 Route::get('test', [SolarClientController::class, 'test'])->name('solar.test');
+Route::get('image', [SolarSitesController::class, 'image'])->name('solar.image');
+
+
